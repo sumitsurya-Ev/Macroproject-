@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+{% block topbar_actions %}
+  <a href="/upload-page" class="btn btn-primary btn-sm">⬆ Upload</a>
+  <span style="font-size:11px;color:var(--muted)"><kbd>⌘U</kbd> quick upload</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="stat-label">Total Processed</div>
+    <div class="stat-value">{{ stats.total }}</div>
+    <div class="stat-sub">documents received</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">Auto-Filed</div>
+    <div class="stat-value">{{ stats.filed }}</div>
+    <div class="stat-sub">≥ 85% confidence</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label">Needs Review</div>
+    <div class="stat-value">{{ stats.review }}</div>
+    <div class="stat-sub">below threshold</div>
+  </div>
+  <div class="stat-card ink">
+    <div class="stat-label">Avg Confidence</div>
+    <div class="stat-value">{{ stats.avg_confidence }}%</div>
+    <div class="stat-sub">on auto-filed docs</div>
+  </div>
+</div>
+
+<div class="flex gap-16" style="align-items:flex-start">
+
+  <!-- LEFT: Upload + Pipeline -->
+  <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+
+    <!-- Drop Zone -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Upload Document</div>
+          <div class="card-desc">PDF is extracted, classified, and auto-filed or queued.</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="/upload" enctype="multipart/form-data" id="upload-form">
+          <div class="upload-zone" id="drop-zone">
+            <input type="file" name="file" accept=".pdf" id="file-input"/>
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">Drop PDF here or click to browse</div>
+            <div class="upload-sub">Invoices · Contracts · Leases · Receipts</div>
+            <div class="upload-file-tag" id="file-tag" style="display:none"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pipeline Flow -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">How It Works</div></div>
+      <div class="card-body" style="padding:0">
+        {% set steps = [
+          ('01','Intercept','PDF arrives via upload or watched folder.'),
+          ('02','Extract','pypdf pulls all text content from every page.'),
+          ('03','Classify','AI matches keywords, scores confidence 0–100%.'),
+          ('04','Gate','≥85% → auto-file. <85% → review queue.'),
+          ('05','File','Moved to Invoices / Contracts / Leases / Receipts / Other.')
+        ] %}
+        {% for num, title, desc in steps %}
+        <div style="display:flex;align-items:flex-start;gap:16px;padding:14px 20px;border-bottom:{% if not loop.last %}1px solid var(--line-2){% else %}none{% endif %}">
+          <span class="text-mono" style="color:var(--muted);font-size:11px;padding-top:1px;width:20px;flex-shrink:0">{{ num }}</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ink)">{{ title }}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ desc }}</div>
+          </div>
+          {% if not loop.last %}
+          <div style="margin-left:auto;color:var(--muted);font-size:16px;align-self:center">↓</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Recent Activity -->
+  <div style="width:420px;flex-shrink:0">
+    <div class="card">
+      <div class="card-header" style="justify-content:space-between">
+        <div class="card-title">Recent Activity</div>
+        <a href="/log" class="btn btn-ghost btn-sm">View all →</a>
+      </div>
+      {% if recent %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Type</th>
+              <th>Conf</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for doc in recent %}
+            <tr>
+              <td class="td-filename" title="{{ doc['filename'] }}">{{ doc['filename']|truncate(22, True, '…') }}</td>
+              <td>
+                {% set tc = {'Invoice':'chip-blue','Contract':'chip-slate','Lease':'chip-green','Receipt':'chip-amber','Other':'chip-slate'} %}
+                <span class="chip {{ tc.get(doc['doc_type'],'chip-slate') }}">{{ doc['doc_type'] }}</span>
+              </td>
+              <td>
+                {% set pct = (doc['confidence']*100)|round(1) %}
+                <span class="text-mono" style="font-size:11px;color:{% if pct>=85 %}var(--green){% elif pct>=60 %}var(--amber){% else %}var(--red){% endif %}">{{ pct }}%</span>
+              </td>
+              <td>
+                {% if doc['status']=='filed' %}
+                  <span class="chip chip-green">Filed</span>
+                {% else %}
+                  <span class="chip chip-amber">Review</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No documents yet</h3>
+        <p>Upload a PDF to see results here.</p>
+      </div>
+      {% endif %}
+      {% if stats.review > 0 %}
+      <div class="card-footer">
+        <span style="font-size:12px;color:var(--amber);font-weight:600">⚠ {{ stats.review }} document{{ 's' if stats.review!=1 }} waiting for review</span>
+        <a href="/review" class="btn btn-sm btn-ghost" style="margin-left:auto">Review →</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Category Breakdown -->
+{% if category_breakdown %}
+<div class="card" style="margin-top:16px">
+  <div class="card-header"><div class="card-title">Category Breakdown</div></div>
+  <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+    {% for cat, count, pct in category_breakdown %}
+    <div style="padding:14px;border:1px solid var(--line);border-radius:6px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">{{ cat }}</div>
+      <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-0.02em">{{ count }}</div>
+      <div class="conf-row" style="margin-top:10px">
+        <div class="conf-track" style="flex:1">
+          <div class="conf-fill" data-pct="{{ pct }}"></div>
+        </div>
+        <span class="text-mono" style="font-size:10px;color:var(--muted)">{{ pct }}%</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<script>
+// Refresh submit button state
+document.getElementById('upload-form').addEventListener('submit',function(){
+  var btn=document.getElementById('submit-btn');
+  if(btn){btn.textContent='Processing…';btn.disabled=true}
+});
+var fileInput=document.getElementById('file-input');
+var fileTag=document.getElementById('file-tag');
+if(fileInput&&fileTag){
+  fileInput.addEventListener('change',function(){
+    if(this.files[0]){
+      fileTag.textContent='📎 '+this.files[0].name;
+      fileTag.style.display='inline-flex';
+    }
+  });
+}
+</script>
+{% endblock %}

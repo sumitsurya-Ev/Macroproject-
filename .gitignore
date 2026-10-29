@@ -1,0 +1,41 @@
+# DocPilot Project — Root Git Ignore
+
+# ── Environment & Secrets ──
+.env
+*.env
+*.env.*
+docpilot/.env
+
+# ── Python bytecode & cache ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+dist/
+build/
+*.egg-info/
+
+# ── Runtime Data & Storage (sensitive documents & db) ──
+*.db
+docpilot.db
+docpilot/docpilot.db
+docpilot/uploads/*
+!docpilot/uploads/.gitkeep
+docpilot/filed/*
+!docpilot/filed/.gitkeep
+docpilot/test_samples/
+
+# ── Local Agent / Tooling Caches ──
+.agents/
+.gemini/
+
+# ── Editor & OS junk ──
+~$*
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Filed Log{% endblock %}
+{% block topbar_title %}Filed Documents Log{% endblock %}
+{% block topbar_actions %}
+  <div class="search-box">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="table-search" placeholder="Search files…" autocomplete="off"/>
+  </div>
+  <span style="font-size:11px;color:var(--muted)">{{ docs|length }} total</span>
+  <a href="/upload-page" class="btn btn-primary btn-sm">+ Upload</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+  {% if docs %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Filename</th>
+          <th>Category</th>
+          <th>Confidence</th>
+          <th>Destination</th>
+          <th>Processed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in docs %}
+        <tr>
+          <td class="text-mono" style="color:var(--muted);font-size:11px">#{{ doc['id'] }}</td>
+          <td>
+            <span class="td-filename" title="{{ doc['filename'] }}">{{ doc['filename'] }}</span>
+          </td>
+          <td>
+            {% set tc = {'Invoice':'chip-blue','Contract':'chip-slate','Lease':'chip-green','Receipt':'chip-amber','Other':'chip-slate'} %}
+            <span class="chip {{ tc.get(doc['doc_type'],'chip-slate') }}">{{ doc['doc_type'] }}</span>
+          </td>
+          <td>
+            {% set pct = (doc['confidence']*100)|round(1) %}
+            <div class="conf-row">
+              <div class="conf-track" style="min-width:50px">
+                <div class="conf-fill" data-pct="{{ pct }}"></div>
+              </div>
+              <span class="conf-val text-mono" style="color:{% if pct>=85 %}var(--green){% elif pct>=60 %}var(--amber){% else %}var(--red){% endif %}">{{ pct }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="text-mono" style="font-size:11px;color:var(--blue)">filed/{{ doc['destination'] }}/</span>
+          </td>
+          <td class="td-ts">{{ doc['uploaded_at'][:16] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📁</div>
+    <h3>No documents filed yet</h3>
+    <p>Upload a PDF to get started. Auto-filed docs appear here.</p>
+    <div style="margin-top:20px">
+      <a href="/upload-page" class="btn btn-primary">Upload First Document</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if docs %}
+<div style="margin-top:12px;font-size:11px;color:var(--muted);text-align:right">
+  <kbd>⌘L</kbd> to come here anytime · <kbd>⌘U</kbd> to upload
+</div>
+{% endif %}
+
+{% endblock %}

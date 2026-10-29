@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Result — {{ doc['filename'] }}{% endblock %}
+{% block topbar_title %}Classification Result{% endblock %}
+{% block topbar_actions %}
+  <a href="/upload-page" class="btn btn-ghost btn-sm">⬆ Upload another</a>
+{% endblock %}
+
+{% block content %}
+{% set pct = (doc['confidence']*100)|round(1) %}
+{% set is_filed = doc['status'] == 'filed' %}
+
+<div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+
+  <!-- Hero Card -->
+  <div class="card result-hero">
+    <div class="result-status-badge {{ 'ok' if is_filed else 'warn' }}">
+      {{ '✓ Auto-Filed' if is_filed else '⚠ Needs Review' }}
+    </div>
+    <h1>{{ doc['doc_type'] }} Detected</h1>
+    <p>{{ 'Filed automatically — ' + pct|string + '% confidence.' if is_filed else 'Confidence below 85%. Confirm in the Review Queue.' }}</p>
+
+    <!-- Ring + Provider -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:28px">
+      <div class="ring-wrap" style="width:96px;height:96px">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle class="ring-bg" cx="48" cy="48" r="40"/>
+          <circle class="ring-fill" cx="48" cy="48" r="40" data-pct="{{ pct }}"/>
+        </svg>
+        <div class="ring-label">{{ pct }}%</div>
+      </div>
+      <span class="chip chip-ink" style="font-size:10px">
+        {% if doc['provider'] == 'gemini' %}🤖 Google Gemini AI
+        {% elif doc['provider'] == 'openai' %}🤖 OpenAI GPT
+        {% else %}🔑 Keyword Classifier{% endif %}
+      </span>
+    </div>
+
+    <!-- AI Reasoning -->
+    {% if doc['reasoning'] %}
+    <div style="margin-top:20px;padding:12px 16px;background:var(--bg);border:1px solid var(--line);border-radius:6px;text-align:left;max-width:480px;margin-left:auto;margin-right:auto">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">AI Reasoning</div>
+      <div style="font-size:13px;color:var(--ink)">{{ doc['reasoning'] }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Smart Filename -->
+  {% if doc['suggested_name'] %}
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Smart Rename</div>
+      <div class="card-desc">AI generated a descriptive filename based on document content</div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Original</div>
+          <code style="font-size:12px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:4px;border:1px solid var(--line)">{{ doc['filename'] }}</code>
+        </div>
+        <span style="color:var(--muted);font-size:18px">→</span>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Filed As</div>
+          <code style="font-size:12px;color:var(--blue);background:var(--blue-dim);padding:4px 8px;border-radius:4px;border:1px solid #C5D9FF">{{ doc['suggested_name'] }}.pdf</code>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Details Grid -->
+  <div class="detail-grid">
+    <div class="detail-cell">
+      <label>Destination</label>
+      <div class="value text-mono" style="font-size:12px;color:var(--blue)">filed/{{ doc['destination'] }}/</div>
+    </div>
+    <div class="detail-cell">
+      <label>Category</label>
+      <div class="value">
+        {% set tc = {'Invoice':'chip-blue','Contract':'chip-slate','Lease':'chip-green','Receipt':'chip-amber','Other':'chip-slate'} %}
+        <span class="chip {{ tc.get(doc['doc_type'],'chip-slate') }}" style="font-size:13px;padding:4px 10px">{{ doc['doc_type'] }}</span>
+      </div>
+    </div>
+    <div class="detail-cell">
+      <label>Status</label>
+      <div class="value">
+        <span class="chip {{ 'chip-green' if is_filed else 'chip-amber' }}">{{ 'Filed' if is_filed else 'Pending Review' }}</span>
+      </div>
+    </div>
+    <div class="detail-cell">
+      <label>Processed</label>
+      <div class="value text-mono" style="font-size:11px;color:var(--muted)">{{ doc['uploaded_at'][:16] }}</div>
+    </div>
+  </div>
+
+  <!-- Extracted Entities -->
+  {% set non_null = [] %}
+  {% for k, v in entities.items() if v %}{% if non_null.append(1) %}{% endif %}{% endfor %}
+
+  {% if non_null %}
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Extracted Information</div>
+      <div class="card-desc">Key data pulled from document content by AI</div>
+    </div>
+    <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;padding:0;background:var(--line)">
+      {% set entity_labels = {
+        'vendor':'Vendor / Sender','client':'Client / Recipient',
+        'amount':'Total Amount','date':'Document Date',
+        'invoice_number':'Invoice / Ref No.','gstin':'GSTIN',
+        'pan':'PAN','due_date':'Due Date','period':'Period / Quarter'
+      } %}
+      {% for key, label in entity_labels.items() %}
+        {% if entities.get(key) %}
+        <div style="background:var(--surface);padding:14px 18px">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">{{ label }}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink);font-family:{% if key in ['gstin','pan','invoice_number'] %}'JetBrains Mono',monospace{% else %}'Inter',sans-serif{% endif %}">
+            {{ entities[key] }}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div class="card">
+    <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="/upload-page" class="btn btn-primary">⬆ Upload Another</a>
+      {% if not is_filed %}
+        <a href="/review" class="btn btn-blue">→ Review Queue</a>
+      {% else %}
+        <a href="/log" class="btn btn-ghost">▤ Filed Log</a>
+      {% endif %}
+      <a href="/" class="btn btn-ghost">⬛ Dashboard</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

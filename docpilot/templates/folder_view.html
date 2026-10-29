@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}{{ folder_name.replace('_',' ') }}{% endblock %}
+
+{% block topbar_title %}
+  <span style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:16px">📁</span>
+    {{ folder_name.replace('_',' ') }}
+  </span>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="/upload-page" class="btn btn-primary btn-sm">⬆ Upload Doc</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Header row ── -->
+<div class="flex items-center justify-between mb-20">
+  <div>
+    <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--ink)">
+      {{ folder_name.replace('_',' ') }}
+    </h1>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">
+      {{ physical_files|length }} file{% if physical_files|length != 1 %}s{% endif %} on disk
+      &nbsp;·&nbsp;
+      {{ docs|length }} record{% if docs|length != 1 %}s{% endif %} in database
+    </p>
+  </div>
+
+  <!-- Open in Explorer button -->
+  <div class="flex gap-8">
+    <a href="/log" class="btn btn-ghost btn-sm">▤ Full Log</a>
+    <!-- Use a form POST trick to open Windows Explorer at the folder -->
+    <button onclick="openExplorer()" class="btn btn-ghost btn-sm" title="Open folder in Windows Explorer">
+      🗂 Open Folder
+    </button>
+  </div>
+</div>
+
+<!-- ── DB Records Card ── -->
+<div class="card mb-20">
+  <div class="card-header">
+    <span style="font-size:15px">🗄</span>
+    <div>
+      <div class="card-title">Filed Records</div>
+      <div class="card-desc">Documents classified and stored in the database</div>
+    </div>
+    <div style="margin-left:auto">
+      <div class="search-box" style="width:220px">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="table-search" placeholder="Search files…">
+      </div>
+    </div>
+  </div>
+
+  {% if docs %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Filename</th>
+          <th>Type</th>
+          <th>Confidence</th>
+          <th>AI Provider</th>
+          <th>Filed At</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in docs %}
+        <tr>
+          <!-- Filename -->
+          <td>
+            <div class="td-filename" title="{{ doc['filename'] }}">{{ doc['filename'] }}</div>
+            {% if doc['suggested_name'] and doc['suggested_name'] != doc['filename'].replace('.pdf','') %}
+            <div style="font-size:10px;color:var(--muted);margin-top:3px;font-family:'JetBrains Mono',monospace">
+              ✦ {{ doc['suggested_name'] }}
+            </div>
+            {% endif %}
+          </td>
+
+          <!-- Type chip -->
+          <td>
+            <span class="chip chip-blue">{{ doc['doc_type'] }}</span>
+          </td>
+
+          <!-- Confidence bar -->
+          <td style="min-width:130px">
+            {% set pct = (doc['confidence'] * 100)|round(1) %}
+            <div class="conf-row">
+              <div class="conf-track">
+                <div class="conf-fill" data-pct="{{ pct }}"></div>
+              </div>
+              <span class="conf-val" style="color:{% if pct >= 85 %}var(--green){% elif pct >= 60 %}#F59E0B{% else %}var(--red){% endif %}">
+                {{ pct }}%
+              </span>
+            </div>
+          </td>
+
+          <!-- Provider -->
+          <td>
+            {% if doc['provider'] == 'gemini' %}
+              <span class="chip chip-ink">✦ Gemini</span>
+            {% elif doc['provider'] == 'openai' %}
+              <span class="chip chip-green">⬡ OpenAI</span>
+            {% else %}
+              <span class="chip chip-slate">⌨ Keyword</span>
+            {% endif %}
+          </td>
+
+          <!-- Timestamp -->
+          <td class="td-ts">{{ doc['uploaded_at'][:16].replace('T',' ') }}</td>
+
+          <!-- View link -->
+          <td>
+            <a href="/result/{{ doc['id'] }}" class="btn btn-ghost btn-sm">View →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🗄</div>
+    <h3>No database records yet</h3>
+    <p>Documents filed by the folder watcher may appear on disk but won't have DB entries.<br>
+       Use the Upload page to process files through the full pipeline.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Physical Files Card ── -->
+<div class="card">
+  <div class="card-header">
+    <span style="font-size:15px">💾</span>
+    <div>
+      <div class="card-title">Files on Disk</div>
+      <div class="card-desc">
+        Actual files inside
+        <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg);padding:1px 6px;border-radius:3px;border:1px solid var(--line)">
+          filed/{{ folder_name }}/
+        </code>
+      </div>
+    </div>
+    <div style="margin-left:auto">
+      <span class="chip chip-slate">{{ physical_files|length }} file{% if physical_files|length != 1 %}s{% endif %}</span>
+    </div>
+  </div>
+
+  {% if physical_files %}
+  <div class="card-body" style="padding:0">
+    <ul style="list-style:none">
+      {% for fname in physical_files %}
+      <li style="display:flex;align-items:center;gap:12px;
+                 padding:11px 20px;border-bottom:1px solid var(--line-2);
+                 transition:background .1s"
+          onmouseover="this.style.background='#FAFAFA'"
+          onmouseout="this.style.background=''">
+
+        <!-- File icon -->
+        <span style="font-size:18px;flex-shrink:0">
+          {% if fname.endswith('.pdf') %}📄
+          {% elif fname.endswith('.docx') or fname.endswith('.doc') %}📝
+          {% elif fname.endswith('.xlsx') or fname.endswith('.csv') %}📊
+          {% elif fname.endswith('.jpg') or fname.endswith('.png') %}🖼
+          {% else %}📎{% endif %}
+        </span>
+
+        <!-- Filename -->
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;
+                     font-weight:600;color:var(--ink);flex:1;
+                     overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+              title="{{ fname }}">
+          {{ fname }}
+        </span>
+
+        <!-- Extension badge -->
+        <span class="chip chip-slate" style="font-size:10px">
+          {{ fname.rsplit('.',1)[-1].upper() if '.' in fname else 'FILE' }}
+        </span>
+
+        <!-- In-DB indicator -->
+        {% set in_db = docs | selectattr('filename', 'equalto', fname) | list | length > 0 %}
+        {% if in_db %}
+          <span class="chip chip-green" title="Has database record">✓ Indexed</span>
+        {% else %}
+          <span class="chip chip-amber" title="No database record — filed by watcher or moved manually">⚡ Watcher</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>Folder is empty</h3>
+    <p>Upload a document and it will be automatically moved here once classified as<br>
+       <strong>{{ folder_name.replace('_',' ') }}</strong>.</p>
+    <a href="/upload-page" class="btn btn-primary" style="margin-top:16px">⬆ Upload Now</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Quick stats strip ── -->
+{% if docs %}
+<div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+  <!-- Avg confidence -->
+  {% set avg_conf = (docs | map(attribute='confidence') | list | sum / docs|length * 100)|round(1) %}
+  <div class="card" style="flex:1;min-width:160px;padding:16px 20px">
+    <div class="stat-label">Avg Confidence</div>
+    <div class="stat-value" style="font-size:24px;color:{% if avg_conf >= 85 %}var(--green){% elif avg_conf >= 60 %}#F59E0B{% else %}var(--red){% endif %}">
+      {{ avg_conf }}%
+    </div>
+    <div class="stat-sub">across {{ docs|length }} record{% if docs|length != 1 %}s{% endif %}</div>
+  </div>
+
+  <!-- Auto-filed count -->
+  {% set auto_filed = docs | selectattr('provider', 'ne', 'keyword') | list | length %}
+  <div class="card" style="flex:1;min-width:160px;padding:16px 20px">
+    <div class="stat-label">AI-Classified</div>
+    <div class="stat-value" style="font-size:24px">{{ auto_filed }}</div>
+    <div class="stat-sub">via Gemini / OpenAI</div>
+  </div>
+
+  <!-- Keyword fallback -->
+  {% set kw = docs | selectattr('provider', 'equalto', 'keyword') | list | length %}
+  <div class="card" style="flex:1;min-width:160px;padding:16px 20px">
+    <div class="stat-label">Keyword Match</div>
+    <div class="stat-value" style="font-size:24px">{{ kw }}</div>
+    <div class="stat-sub">offline classification</div>
+  </div>
+
+  <!-- Latest -->
+  <div class="card" style="flex:1;min-width:180px;padding:16px 20px">
+    <div class="stat-label">Latest Filed</div>
+    <div class="stat-value" style="font-size:14px;font-family:'JetBrains Mono',monospace;font-weight:700">
+      {{ docs[0]['uploaded_at'][:16].replace('T',' ') }}
+    </div>
+    <div class="stat-sub">most recent document</div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+// Open the filed folder in Windows Explorer
+function openExplorer() {
+  // We'll trigger a hidden fetch to a helper endpoint
+  fetch('/open-folder/{{ folder_name }}')
+    .then(function(r){ if(!r.ok) throw new Error('fail'); })
+    .catch(function(){
+      // Fallback: tell user where to look
+      alert('Folder path: filed\\{{ folder_name }}\n\nOpen Windows Explorer and navigate there manually.');
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+# DocPilot — Git Ignore Rules
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Environment & secrets ──
+.env
+*.env
+.env.*
+!.env.example
+
+# ── Runtime data (never commit these) ──
+docpilot.db
+uploads/
+filed/
+
+# ── Test artifacts ──
+test_samples/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini

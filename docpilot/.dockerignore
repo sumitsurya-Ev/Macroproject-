@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.git
+.gitignore
+docpilot.db
+uploads/*
+!uploads/.gitkeep
+filed/*
+!filed/.gitkeep
+test_samples/
+.vscode
+.idea
