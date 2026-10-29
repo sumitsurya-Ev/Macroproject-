@@ -1,4 +1,4 @@
-"""
+﻿"""
 app.py — DocPilot Flask application (AI-powered).
 """
 
@@ -17,7 +17,7 @@ from ai_classifier import ai_classify, get_provider_status, get_all_known_types
 from filer        import file_document, get_destination_folder, ensure_folders, list_all_folders
 
 app = Flask(__name__)
-app.secret_key = "docpilot-secret-2026"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "docpilot-secret-local-2026")
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -321,5 +321,7 @@ def settings_save():
 # RUN
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, use_reloader=False)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
 
