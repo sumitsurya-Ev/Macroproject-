@@ -277,34 +277,40 @@ def settings_save():
     gemini_key = request.form.get("gemini_key", "").strip()
     openai_key = request.form.get("openai_key", "").strip()
 
-    # Skip masked placeholder values (user didn't change them)
+    # Skip masked placeholder values (e.g. •••di8GMg)
     def is_masked(val):
-        return all(c == '•' for c in val)
+        return "•" in val
+
+    existing_gemini = os.environ.get("GEMINI_API_KEY", "")
+    existing_openai = os.environ.get("OPENAI_API_KEY", "")
+
+    final_gemini = existing_gemini if is_masked(gemini_key) else (gemini_key or existing_gemini)
+    final_openai = existing_openai if is_masked(openai_key) else (openai_key or existing_openai)
 
     env_lines = []
-    if gemini_key and not is_masked(gemini_key):
-        env_lines.append(f"GEMINI_API_KEY={gemini_key}")
-    if openai_key and not is_masked(openai_key):
-        env_lines.append(f"OPENAI_API_KEY={openai_key}")
+    if final_gemini:
+        env_lines.append(f"GEMINI_API_KEY={final_gemini}")
+    if final_openai:
+        env_lines.append(f"OPENAI_API_KEY={final_openai}")
 
     if env_lines:
-        # Write to .env file so it persists across restarts
-        with open(".env", "w") as f:
+        # Write to .env file with explicit UTF-8 so it persists safely across restarts
+        with open(".env", "w", encoding="utf-8") as f:
             f.write("\n".join(env_lines) + "\n")
 
         # Apply immediately to current process environment
-        import os, importlib
-        if gemini_key and not is_masked(gemini_key):
-            os.environ["GEMINI_API_KEY"] = gemini_key
-        if openai_key and not is_masked(openai_key):
-            os.environ["OPENAI_API_KEY"] = openai_key
+        import importlib
+        if final_gemini:
+            os.environ["GEMINI_API_KEY"] = final_gemini
+        if final_openai:
+            os.environ["OPENAI_API_KEY"] = final_openai
 
         # Reload config and ai_classifier with new env
         import config as cfg_mod, ai_classifier as ai_mod
         importlib.reload(cfg_mod)
         importlib.reload(ai_mod)
 
-        flash("API key saved. AI engine is now active — restart the app to apply fully.", "success")
+        flash("API key saved. AI engine is now active.", "success")
     else:
         flash("No changes made.", "error")
 
