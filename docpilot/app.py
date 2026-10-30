@@ -240,7 +240,8 @@ def open_folder(folder_name):
     # Sanitise: only letters, digits, spaces, underscores, hyphens
     safe = "".join(c for c in folder_name if c.isalnum() or c in (" ", "_", "-"))
     folder_path = os.path.abspath(os.path.join("filed", safe))
-    if os.path.isdir(folder_path):
+    # Explorer only exists on Windows; on Linux hosts (e.g. Render) just return the path.
+    if os.name == "nt" and os.path.isdir(folder_path):
         subprocess.Popen(["explorer", folder_path])
     from flask import jsonify
     return jsonify({"ok": True, "path": folder_path})
