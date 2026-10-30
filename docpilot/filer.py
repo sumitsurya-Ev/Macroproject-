@@ -1,4 +1,4 @@
-"""
+﻿"""
 filer.py — Fully dynamic document filer.
 
 Creates destination folders on-the-fly for ANY document type.
@@ -78,6 +78,13 @@ def ensure_folders():
     """Creates the base filed/ directory. Individual category folders are created on demand."""
     os.makedirs(BASE_FILED_DIR, exist_ok=True)
 
+
+
+def folder_exists(doc_type: str) -> bool:
+    """Returns True if a filing folder for this doc_type ALREADY existed before this call."""
+    folder_name = _sanitize_folder_name(doc_type)
+    folder_path = os.path.join(BASE_FILED_DIR, folder_name)
+    return os.path.isdir(folder_path)
 
 def list_all_folders() -> list:
     """Returns a sorted list of all existing category folders inside filed/."""

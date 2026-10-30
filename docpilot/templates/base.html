@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -181,9 +181,12 @@ body{
 ═══════════════════════════════════════ */
 .stats-grid{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(5,1fr);
   gap:12px;
   margin-bottom:20px;
+}
+@media(max-width:1100px){
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
 }
 .stat-card{
   background:var(--surface);
@@ -201,6 +204,7 @@ body{
 .stat-card.green::before{background:var(--green)}
 .stat-card.amber::before{background:#F59E0B}
 .stat-card.ink::before{background:var(--ink)}
+.stat-card.purple::before{background:#6366F1}
 .stat-label{
   font-size:10px;font-weight:600;
   color:var(--muted);
@@ -409,6 +413,7 @@ tbody tr:hover td{background:#FAFAFA}
   margin-bottom:20px;
 }
 .result-status-badge.ok  {background:var(--green-dim);color:var(--green);border:1.5px solid #AADCC8}
+.result-status-badge.info{background:var(--blue-dim);color:var(--blue);border:1.5px solid #C5D9FF}
 .result-status-badge.warn{background:var(--amber-dim);color:var(--amber);border:1.5px solid #FDE68A}
 .result-hero h1{
   font-size:28px;font-weight:800;
@@ -568,6 +573,7 @@ kbd{
   <nav class="sidebar-section">
     <div class="sidebar-label">Documents</div>
     <a href="/review" class="nav-item {% if request.path=='/review' %}active{% endif %}">
+    <a href="/pending" class="nav-item {% if request.path=='/pending' %}active{% endif %}">       <span class="nav-icon">🔔</span>       Approvals       {% if pending_count|default(0) > 0 %}<span class="nav-badge" style="background:var(--blue)">{{ pending_count }}</span>{% endif %}     </a>
       <span class="nav-icon">◐</span>
       Review Queue
       {% set q_count = review_count|default(0) %}
@@ -712,14 +718,16 @@ document.addEventListener('DOMContentLoaded',function(){
     setTimeout(function(){el.style.width=pct+'%'},100);
   });
 
-  // Animate rings
+  // Animate rings — reads r from actual SVG circle (fixes ring showing wrong %)
   document.querySelectorAll('.ring-fill[data-pct]').forEach(function(el){
     var pct=parseFloat(el.dataset.pct);
-    var r=32;var circ=2*Math.PI*r;
+    var svgR=parseFloat(el.getAttribute('r'));
+    var r=(!isNaN(svgR)&&svgR>0)?svgR:40; // use actual SVG r attribute, fallback 40
+    var circ=2*Math.PI*r;
     el.style.strokeDasharray=circ;
-    el.style.strokeDashoffset=circ;
+    el.style.strokeDashoffset=circ; // start fully hidden
     el.style.stroke=pct>=85?'#00875A':pct>=60?'#F59E0B':'#CC0022';
-    setTimeout(function(){el.style.strokeDashoffset=circ*(1-pct/100)},100);
+    setTimeout(function(){el.style.strokeDashoffset=circ*(1-pct/100)},120);
   });
 
   // Table search

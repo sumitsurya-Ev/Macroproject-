@@ -20,6 +20,11 @@
     <div class="stat-value">{{ stats.filed }}</div>
     <div class="stat-sub">≥ 85% confidence</div>
   </div>
+  <div class="stat-card purple">
+    <div class="stat-label">Awaiting Approval</div>
+    <div class="stat-value">{{ stats.pending }}</div>
+    <div class="stat-sub">new folder confirmation</div>
+  </div>
   <div class="stat-card amber">
     <div class="stat-label">Needs Review</div>
     <div class="stat-value">{{ stats.review }}</div>
@@ -66,8 +71,8 @@
           ('01','Intercept','PDF arrives via upload or watched folder.'),
           ('02','Extract','pypdf pulls all text content from every page.'),
           ('03','Classify','AI matches keywords, scores confidence 0–100%.'),
-          ('04','Gate','≥85% → auto-file. <85% → review queue.'),
-          ('05','File','Moved to Invoices / Contracts / Leases / Receipts / Other.')
+          ('04','Gate','≥85% → auto-file or folder approval. <85% → review queue.'),
+          ('05','File','Moved to Invoices / Contracts / Leases / Receipts / Approved folders.')
         ] %}
         {% for num, title, desc in steps %}
         <div style="display:flex;align-items:flex-start;gap:16px;padding:14px 20px;border-bottom:{% if not loop.last %}1px solid var(--line-2){% else %}none{% endif %}">
@@ -119,6 +124,8 @@
               <td>
                 {% if doc['status']=='filed' %}
                   <span class="chip chip-green">Filed</span>
+                {% elif doc['status']=='pending_approval' %}
+                  <span class="chip chip-blue">Approval</span>
                 {% else %}
                   <span class="chip chip-amber">Review</span>
                 {% endif %}
@@ -133,6 +140,12 @@
         <div class="empty-icon">📭</div>
         <h3>No documents yet</h3>
         <p>Upload a PDF to see results here.</p>
+      </div>
+      {% endif %}
+      {% if stats.pending > 0 %}
+      <div class="card-footer" style="background:var(--blue-dim);border-top:1px solid #C5D9FF">
+        <span style="font-size:12px;color:var(--blue);font-weight:600">🔔 {{ stats.pending }} document{{ 's' if stats.pending!=1 }} awaiting folder approval</span>
+        <a href="/pending" class="btn btn-sm btn-blue" style="margin-left:auto">Decide →</a>
       </div>
       {% endif %}
       {% if stats.review > 0 %}

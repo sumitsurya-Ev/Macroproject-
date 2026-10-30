@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Settings — AI Engine{% endblock %}
 {% block topbar_title %}Settings{% endblock %}
 
@@ -126,6 +126,72 @@
     </div>
   </div>
 
+
+  <!-- ── Watched Folders ── -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Auto-Catch: Watched Folders</div>
+        <div class="card-desc">DocPilot monitors these folders and automatically intercepts new PDF files</div>
+      </div>
+      <span class="chip chip-slate" style="margin-left:auto">Non-destructive — copies only</span>
+    </div>
+
+    <!-- Currently watching -->
+    {% if watcher_folders %}
+    <div style="border-bottom:1px solid var(--line-2)">
+      {% for wf in watcher_folders %}
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line-2)">
+        <span style="font-size:14px">{% if wf['enabled'] %}🟢{% else %}⚫{% endif %}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">{{ wf['label'] }}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">{{ wf['folder_path'] }}</div>
+        </div>
+        <form method="POST" action="/settings/watchers/remove" style="display:inline">
+          <input type="hidden" name="folder_path" value="{{ wf['folder_path'] }}">
+          <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">
+      No folders being watched yet. Add one below.
+    </div>
+    {% endif %}
+
+    <!-- Quick-add default suggestions -->
+    {% if default_watches %}
+    <div style="padding:14px 20px;border-bottom:1px solid var(--line-2)">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Quick Add</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        {% for dw in default_watches %}
+        <form method="POST" action="/settings/watchers/add" style="display:inline">
+          <input type="hidden" name="folder_path" value="{{ dw['path'] }}">
+          <input type="hidden" name="label" value="{{ dw['label'] }}">
+          <button class="btn btn-ghost btn-sm" type="submit">+ Watch {{ dw['label'] }}</button>
+        </form>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Custom path -->
+    <div class="card-body">
+      <form method="POST" action="/settings/watchers/add" style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" name="folder_path" placeholder="C:\Users\YourName\SomePath…"
+               style="flex:1;min-width:200px;height:36px;padding:0 12px;border:1px solid var(--line);
+                      border-radius:6px;font-size:12px;font-family:'JetBrains Mono',monospace">
+        <input type="text" name="label" placeholder="Label (optional)"
+               style="width:140px;height:36px;padding:0 12px;border:1px solid var(--line);
+                      border-radius:6px;font-size:12px;font-family:'Inter',sans-serif">
+        <button class="btn btn-primary" type="submit">Add Folder</button>
+      </form>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">
+        DocPilot will COPY intercepted files — your originals in Downloads/WhatsApp are never deleted.
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>

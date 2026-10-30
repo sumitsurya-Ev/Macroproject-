@@ -1,20 +1,29 @@
-﻿"""
-app.py — DocPilot Flask application (AI-powered).
+"""
+app.py — DocPilot Flask application (AI-powered, v2).
 """
 
 import os
 import json
 import hashlib
 import sqlite3
+import shutil
 
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 
-from database     import (init_db, insert_document, get_document, get_review_queue,
-                           get_filed_log, get_all_documents, update_document_status,
-                           get_stats, check_duplicate)
+from database import (
+    init_db, insert_document, get_document, get_review_queue,
+    get_filed_log, get_all_documents, update_document_status,
+    get_stats, check_duplicate, get_pending_approvals,
+    get_pending_approvals_count, register_folder, get_all_folder_metadata,
+    update_folder_description, get_watcher_folders, add_watcher_folder,
+    toggle_watcher_folder, remove_watcher_folder,
+)
 from extractor    import extract_text, is_pdf
 from ai_classifier import ai_classify, get_provider_status, get_all_known_types
-from filer        import file_document, get_destination_folder, ensure_folders, list_all_folders
+from filer        import (
+    file_document, get_destination_folder, ensure_folders,
+    list_all_folders, folder_exists,
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "docpilot-secret-local-2026")
@@ -25,25 +34,30 @@ ensure_folders()
 init_db()
 
 
-# ── Context processor: inject globals into every template ──
+# ── Context processor: inject globals into every template ──────────────────────
 @app.context_processor
 def inject_globals():
     try:
         conn = sqlite3.connect("docpilot.db")
-        count = conn.execute(
+        review_count = conn.execute(
             "SELECT COUNT(*) FROM documents WHERE status='needs_review'"
+        ).fetchone()[0]
+        pending_count = conn.execute(
+            "SELECT COUNT(*) FROM documents WHERE status='pending_approval'"
         ).fetchone()[0]
         conn.close()
     except Exception:
-        count = 0
+        review_count = 0
+        pending_count = 0
     return dict(
-        review_count=count,
+        review_count=review_count,
+        pending_count=pending_count,
         ai_status=get_provider_status(),
-        all_folders=list_all_folders()
+        all_folders=list_all_folders(),
     )
 
 
-# ── Category breakdown ──
+# ── Category breakdown ─────────────────────────────────────────────────────────
 def get_category_breakdown():
     conn = sqlite3.connect("docpilot.db")
     rows = conn.execute(
@@ -114,38 +128,49 @@ def upload():
     # ── AI Classification ──
     result = ai_classify(text, original_filename=file.filename)
 
-    # ── Determine smart filename ──
+    # ── Smart filename ──
     orig_ext       = ".pdf"
     smart_name     = result.get("suggested_filename") or os.path.splitext(file.filename)[0]
     final_filename = smart_name + orig_ext
 
-    dest_folder  = get_destination_folder(result["type"])
-    dest_display = os.path.basename(dest_folder)
+    # ── Decide: auto-file, pending approval, or review ──
+    doc_type       = result["type"]
+    confidence     = result["confidence"]
+    dest_folder    = get_destination_folder(doc_type)   # creates folder if new
+    dest_display   = os.path.basename(dest_folder)
+    is_new_folder  = not folder_exists(doc_type)        # was this folder brand-new?
 
-    # ── File or hold for review ──
-    if result["status"] == "filed":
-        # Rename file on disk before filing
+    if result["status"] == "filed" and is_new_folder:
+        # High confidence but brand new folder → ask user permission
+        filing_status = "pending_approval"
+        stored_filename = file.filename
+    elif result["status"] == "filed":
+        # High confidence + known folder → auto-file
+        filing_status = "filed"
         renamed_path = os.path.join(UPLOAD_FOLDER, final_filename)
         if save_path != renamed_path and not os.path.exists(renamed_path):
             os.rename(save_path, renamed_path)
             save_path = renamed_path
-        file_document(save_path, result["type"])
+        file_document(save_path, doc_type)
         stored_filename = final_filename
     else:
-        stored_filename = file.filename   # keep original name in uploads for review
+        # Low confidence → review queue
+        filing_status = "needs_review"
+        stored_filename = file.filename
 
     # ── Save to DB ──
     doc_id = insert_document(
         filename      = stored_filename,
-        doc_type      = result["type"],
-        confidence    = result["confidence"],
+        doc_type      = doc_type,
+        confidence    = confidence,
         destination   = dest_display,
-        status        = result["status"],
+        status        = filing_status,
         reasoning     = result.get("reasoning", ""),
         entities      = result.get("entities", {}),
         suggested_name= smart_name,
         provider      = result.get("provider", "keyword"),
-        file_hash     = file_hash
+        file_hash     = file_hash,
+        source_path   = save_path,
     )
 
     return redirect(url_for("result", doc_id=doc_id))
@@ -161,7 +186,6 @@ def result(doc_id):
         flash("Document not found.", "error")
         return redirect(url_for("index"))
 
-    # Parse entities JSON for template
     try:
         entities = json.loads(doc["entities"]) if doc["entities"] else {}
     except Exception:
@@ -177,7 +201,6 @@ def result(doc_id):
 def review():
     items     = get_review_queue()
     doc_types = get_all_known_types()
-    # Parse entities for each item
     parsed = []
     for item in items:
         try:
@@ -193,13 +216,14 @@ def confirm_review(doc_id):
     new_type = request.form.get("doc_type", "").strip()
     custom   = request.form.get("custom_type", "").strip()
     if custom:
-        new_type = custom   # user typed their own category
+        new_type = custom
 
     if not new_type:
         flash("Please select or type a document category.", "error")
         return redirect(url_for("review"))
 
     new_destination = os.path.basename(get_destination_folder(new_type))
+    register_folder(new_destination)
     doc = get_document(doc_id)
     if doc:
         upload_path = os.path.join(UPLOAD_FOLDER, doc["filename"])
@@ -212,7 +236,106 @@ def confirm_review(doc_id):
 
 
 # ─────────────────────────────────────────────
-# FOLDER VIEW (per-folder document list)
+# PENDING APPROVAL (new folder needs permission)
+# ─────────────────────────────────────────────
+@app.route("/pending")
+def pending():
+    items  = get_pending_approvals()
+    parsed = []
+    for item in items:
+        try:
+            ent = json.loads(item["entities"]) if item["entities"] else {}
+        except Exception:
+            ent = {}
+        parsed.append((item, ent))
+    return render_template("pending_approval.html", items=parsed)
+
+
+@app.route("/pending/approve/<int:doc_id>", methods=["POST"])
+def approve_folder(doc_id):
+    """User says YES — create the folder and file the document."""
+    doc = get_document(doc_id)
+    if not doc:
+        flash("Document not found.", "error")
+        return redirect(url_for("pending"))
+
+    doc_type    = doc["doc_type"]
+    dest_folder = get_destination_folder(doc_type)   # creates the folder
+    dest_name   = os.path.basename(dest_folder)
+    description = request.form.get("description", "").strip()
+
+    # Register folder in metadata
+    register_folder(dest_name, description=description, auto_created=True)
+
+    # Move file from uploads/ to filed/
+    src = doc["source_path"] or os.path.join(UPLOAD_FOLDER, doc["filename"])
+    if os.path.exists(src):
+        file_document(src, doc_type)
+    else:
+        # File might be in uploads under original name
+        alt_src = os.path.join(UPLOAD_FOLDER, doc["filename"])
+        if os.path.exists(alt_src):
+            file_document(alt_src, doc_type)
+
+    update_document_status(doc_id, doc_type, dest_name, "filed")
+    flash(f"New folder '{dest_name}' created and document filed.", "success")
+    return redirect(url_for("pending"))
+
+
+@app.route("/pending/rename/<int:doc_id>", methods=["POST"])
+def rename_folder(doc_id):
+    """User says NO and provides their own folder name."""
+    doc = get_document(doc_id)
+    if not doc:
+        flash("Document not found.", "error")
+        return redirect(url_for("pending"))
+
+    custom_folder = request.form.get("folder_name", "").strip()
+    description   = request.form.get("description", "").strip()
+
+    if not custom_folder:
+        flash("Please enter a folder name.", "error")
+        return redirect(url_for("pending"))
+
+    dest_folder = get_destination_folder(custom_folder)
+    dest_name   = os.path.basename(dest_folder)
+
+    register_folder(dest_name, description=description, auto_created=True)
+
+    src = doc["source_path"] or os.path.join(UPLOAD_FOLDER, doc["filename"])
+    if os.path.exists(src):
+        file_document(src, custom_folder)
+    else:
+        alt_src = os.path.join(UPLOAD_FOLDER, doc["filename"])
+        if os.path.exists(alt_src):
+            file_document(alt_src, custom_folder)
+
+    update_document_status(doc_id, custom_folder, dest_name, "filed")
+    flash(f"Filed to '{dest_name}/' as requested.", "success")
+    return redirect(url_for("pending"))
+
+
+@app.route("/pending/reject/<int:doc_id>", methods=["POST"])
+def reject_document(doc_id):
+    """User says NO and doesn't want to file right now — move to review queue."""
+    update_document_status(doc_id, "", "", "needs_review")
+    flash("Document moved to Review Queue.", "error")
+    return redirect(url_for("pending"))
+
+
+# ─────────────────────────────────────────────
+# API: live approval count for badge refresh
+# ─────────────────────────────────────────────
+@app.route("/api/approvals/count")
+def api_approvals_count():
+    return jsonify({
+        "pending": get_pending_approvals_count(),
+        "review":  len(get_review_queue()),
+    })
+
+
+# ─────────────────────────────────────────────
+# FOLDER VIEW
 # ─────────────────────────────────────────────
 @app.route("/folder/<folder_name>")
 def folder_view(folder_name):
@@ -223,12 +346,23 @@ def folder_view(folder_name):
         (folder_name,)
     ).fetchall()
     conn.close()
+
     folder_path    = os.path.join("filed", folder_name)
     physical_files = sorted(os.listdir(folder_path)) if os.path.isdir(folder_path) else []
+
+    # Get folder description if available
+    conn2 = sqlite3.connect("docpilot.db")
+    conn2.row_factory = sqlite3.Row
+    meta = conn2.execute(
+        "SELECT * FROM folder_metadata WHERE folder_name=?", (folder_name,)
+    ).fetchone()
+    conn2.close()
+
     return render_template("folder_view.html",
                            folder_name=folder_name,
                            docs=docs,
-                           physical_files=physical_files)
+                           physical_files=physical_files,
+                           meta=meta)
 
 
 # ─────────────────────────────────────────────
@@ -237,13 +371,10 @@ def folder_view(folder_name):
 @app.route("/open-folder/<folder_name>")
 def open_folder(folder_name):
     import subprocess
-    # Sanitise: only letters, digits, spaces, underscores, hyphens
     safe = "".join(c for c in folder_name if c.isalnum() or c in (" ", "_", "-"))
     folder_path = os.path.abspath(os.path.join("filed", safe))
-    # Explorer only exists on Windows; on Linux hosts (e.g. Render) just return the path.
-    if os.name == "nt" and os.path.isdir(folder_path):
+    if os.path.isdir(folder_path):
         subprocess.Popen(["explorer", folder_path])
-    from flask import jsonify
     return jsonify({"ok": True, "path": folder_path})
 
 
@@ -256,21 +387,35 @@ def log():
     return render_template("filed_log.html", docs=docs)
 
 
-
 # ─────────────────────────────────────────────
-# SETTINGS
+# SETTINGS — API Keys
 # ─────────────────────────────────────────────
 @app.route("/settings")
 def settings():
     import config
-    # Mask keys — only show last 6 chars if set
     def mask(key):
         return ("•" * (len(key) - 6) + key[-6:]) if len(key) > 6 else ("•" * len(key))
     current_gemini = mask(config.GEMINI_API_KEY) if config.GEMINI_API_KEY else ""
     current_openai = mask(config.OPENAI_API_KEY) if config.OPENAI_API_KEY else ""
+
+    # Watched folders
+    watcher_folders = get_watcher_folders()
+    # Suggest default Windows folders
+    username = os.environ.get("USERNAME") or os.environ.get("USER", "")
+    default_watches = []
+    for path, label in [
+        (f"C:\\Users\\{username}\\Downloads", "Downloads"),
+        (f"C:\\Users\\{username}\\Desktop",   "Desktop"),
+        (f"C:\\Users\\{username}\\Documents", "Documents"),
+    ]:
+        if os.path.isdir(path):
+            default_watches.append({"path": path, "label": label})
+
     return render_template("settings.html",
                            current_gemini=current_gemini,
-                           current_openai=current_openai)
+                           current_openai=current_openai,
+                           watcher_folders=watcher_folders,
+                           default_watches=default_watches)
 
 
 @app.route("/settings/save", methods=["POST"])
@@ -278,7 +423,6 @@ def settings_save():
     gemini_key = request.form.get("gemini_key", "").strip()
     openai_key = request.form.get("openai_key", "").strip()
 
-    # Skip masked placeholder values (e.g. •••di8GMg)
     def is_masked(val):
         return "•" in val
 
@@ -295,22 +439,16 @@ def settings_save():
         env_lines.append(f"OPENAI_API_KEY={final_openai}")
 
     if env_lines:
-        # Write to .env file with explicit UTF-8 so it persists safely across restarts
         with open(".env", "w", encoding="utf-8") as f:
             f.write("\n".join(env_lines) + "\n")
-
-        # Apply immediately to current process environment
         import importlib
         if final_gemini:
             os.environ["GEMINI_API_KEY"] = final_gemini
         if final_openai:
             os.environ["OPENAI_API_KEY"] = final_openai
-
-        # Reload config and ai_classifier with new env
         import config as cfg_mod, ai_classifier as ai_mod
         importlib.reload(cfg_mod)
         importlib.reload(ai_mod)
-
         flash("API key saved. AI engine is now active.", "success")
     else:
         flash("No changes made.", "error")
@@ -319,10 +457,50 @@ def settings_save():
 
 
 # ─────────────────────────────────────────────
+# SETTINGS — Watched Folders
+# ─────────────────────────────────────────────
+@app.route("/settings/watchers/add", methods=["POST"])
+def add_watcher():
+    path  = request.form.get("folder_path", "").strip()
+    label = request.form.get("label", "").strip()
+    if path and os.path.isdir(path):
+        add_watcher_folder(path, label)
+        flash(f"Now watching: {path}", "success")
+    else:
+        flash("Folder path not found. Please enter a valid Windows path.", "error")
+    return redirect(url_for("settings"))
+
+
+@app.route("/settings/watchers/remove", methods=["POST"])
+def remove_watcher():
+    path = request.form.get("folder_path", "").strip()
+    remove_watcher_folder(path)
+    flash("Stopped watching that folder.", "success")
+    return redirect(url_for("settings"))
+
+
+@app.route("/settings/watchers/toggle", methods=["POST"])
+def toggle_watcher():
+    path    = request.form.get("folder_path", "").strip()
+    enabled = request.form.get("enabled", "1") == "1"
+    toggle_watcher_folder(path, enabled)
+    return jsonify({"ok": True})
+
+
+# ─────────────────────────────────────────────
+# FOLDER DESCRIPTION update
+# ─────────────────────────────────────────────
+@app.route("/folder/<folder_name>/describe", methods=["POST"])
+def describe_folder(folder_name):
+    desc = request.form.get("description", "").strip()
+    update_folder_description(folder_name, desc)
+    flash("Folder description saved.", "success")
+    return redirect(url_for("folder_view", folder_name=folder_name))
+
+
+# ─────────────────────────────────────────────
 # RUN
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
-
-

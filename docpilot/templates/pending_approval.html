@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Pending Approval{% endblock %}
+{% block topbar_title %}
+  <span style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:16px">🔔</span> Pending Folder Approval
+  </span>
+{% endblock %}
+{% block topbar_actions %}
+  <span style="font-size:12px;color:var(--muted)">DocPilot found documents that need new folders</span>
+{% endblock %}
+
+{% block content %}
+
+{% if not items %}
+<div class="empty-state" style="padding:80px 32px">
+  <div class="empty-icon" style="background:var(--green-dim);border-color:#AADCC8">✓</div>
+  <h3>All caught up!</h3>
+  <p>No documents are waiting for folder approval right now.</p>
+  <a href="/" class="btn btn-primary" style="margin-top:16px">Back to Dashboard</a>
+</div>
+{% else %}
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-20">
+  <div>
+    <h1 style="font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--ink)">
+      {{ items|length }} Document{{ 's' if items|length != 1 }} Need Your Decision
+    </h1>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">
+      DocPilot is confident about these documents but wants to create a <strong>new folder</strong>.
+      You decide: approve the folder, rename it, or send to review queue.
+    </p>
+  </div>
+</div>
+
+<!-- Explainer strip -->
+<div style="background:var(--blue-dim);border:1px solid #C5D9FF;border-radius:8px;
+            padding:14px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px">
+  <span style="font-size:20px;flex-shrink:0">💡</span>
+  <div>
+    <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:4px">How this works</div>
+    <div style="font-size:12px;color:var(--ink);line-height:1.6">
+      DocPilot identified a document type that doesn't have a folder yet.
+      <strong>Approve</strong> to let DocPilot create the folder and file it automatically.
+      <strong>Rename</strong> if you want a different folder name or want to add a description.
+      <strong>Send to Review</strong> if you want to decide later.
+    </div>
+  </div>
+</div>
+
+<!-- Cards -->
+{% for doc, entities in items %}
+{% set pct = (doc['confidence']*100)|round(1) %}
+<div class="card" style="margin-bottom:16px;border-left:3px solid var(--blue)">
+
+  <!-- Head -->
+  <div class="card-header" style="background:var(--blue-dim)">
+    <div style="display:flex;flex-direction:column;flex:1;gap:4px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--ink)">
+        {{ doc['filename'] }}
+      </div>
+      <div style="font-size:11px;color:var(--muted)">
+        Uploaded {{ doc['uploaded_at'][:16].replace('T',' ') }}
+        &nbsp;·&nbsp; via <strong>{{ doc['provider']|title }}</strong>
+      </div>
+    </div>
+
+    <!-- Confidence ring (small) -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">
+      <div class="ring-wrap" style="width:60px;height:60px">
+        <svg width="60" height="60" viewBox="0 0 60 60">
+          <circle class="ring-bg" cx="30" cy="30" r="25"/>
+          <circle class="ring-fill" cx="30" cy="30" r="25" data-pct="{{ pct }}"/>
+        </svg>
+        <div class="ring-label" style="font-size:11px">{{ pct }}%</div>
+      </div>
+      <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">confidence</span>
+    </div>
+  </div>
+
+  <!-- Body: AI proposal -->
+  <div style="padding:16px 20px;border-bottom:1px solid var(--line-2)">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">AI Says This Is</div>
+        <span class="chip chip-blue" style="font-size:12px;padding:4px 12px">{{ doc['doc_type'] }}</span>
+      </div>
+      <span style="font-size:18px;color:var(--muted)">→</span>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Wants to Create Folder</div>
+        <span class="chip chip-ink" style="font-size:12px;padding:4px 12px">📁 {{ doc['destination'] }}/</span>
+      </div>
+    </div>
+
+    {% if doc['reasoning'] %}
+    <div style="background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">AI Reasoning</div>
+      <div style="font-size:12px;color:var(--ink)">{{ doc['reasoning'] }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Entities -->
+    {% set non_null = [] %}
+    {% for k, v in entities.items() if v %}{% if non_null.append(1) %}{% endif %}{% endfor %}
+    {% if non_null %}
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      {% for k, v in entities.items() %}{% if v %}
+      <div style="background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:6px 10px">
+        <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">{{ k.replace('_',' ') }}</div>
+        <div style="font-size:11px;font-weight:600;color:var(--ink);margin-top:2px">{{ v }}</div>
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Actions -->
+  <div style="padding:16px 20px;background:var(--bg);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+
+    <!-- Option 1: APPROVE -->
+    <div style="border:1.5px solid #AADCC8;border-radius:8px;padding:14px;background:#fff">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px">✓ Approve New Folder</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+        DocPilot will create <strong>{{ doc['destination'] }}/</strong> and file this document there.
+      </div>
+      <form method="POST" action="/pending/approve/{{ doc['id'] }}">
+        <input type="text" name="description" placeholder="Optional: describe what goes in this folder…"
+               style="width:100%;margin-bottom:8px;padding:6px 10px;border:1px solid var(--line);
+                      border-radius:5px;font-size:11px;font-family:'Inter',sans-serif">
+        <button type="submit" class="btn btn-success btn-full" style="height:36px;font-size:12px">
+          Yes, create {{ doc['destination'] }}/
+        </button>
+      </form>
+    </div>
+
+    <!-- Option 2: RENAME -->
+    <div style="border:1.5px solid #C5D9FF;border-radius:8px;padding:14px;background:#fff">
+      <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">✏ Use Different Name</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+        Type your preferred folder name instead.
+      </div>
+      <form method="POST" action="/pending/rename/{{ doc['id'] }}">
+        <input type="text" name="folder_name" placeholder="e.g. Tax Documents, Client Briefs…" required
+               style="width:100%;margin-bottom:6px;padding:6px 10px;border:1px solid var(--line);
+                      border-radius:5px;font-size:11px;font-family:'Inter',sans-serif">
+        <input type="text" name="description" placeholder="Describe what belongs here (optional)…"
+               style="width:100%;margin-bottom:8px;padding:6px 10px;border:1px solid var(--line);
+                      border-radius:5px;font-size:11px;font-family:'Inter',sans-serif">
+        <button type="submit" class="btn btn-blue btn-full" style="height:36px;font-size:12px">
+          File with my folder name
+        </button>
+      </form>
+    </div>
+
+    <!-- Option 3: REJECT / REVIEW LATER -->
+    <div style="border:1.5px solid var(--line);border-radius:8px;padding:14px;background:#fff">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">↩ Decide Later</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+        Move to Review Queue. You can pick the right folder there at any time.
+      </div>
+      <form method="POST" action="/pending/reject/{{ doc['id'] }}">
+        <button type="submit" class="btn btn-ghost btn-full" style="height:36px;font-size:12px">
+          Send to Review Queue
+        </button>
+      </form>
+    </div>
+
+  </div><!-- /actions -->
+</div><!-- /card -->
+{% endfor %}
+
+{% endif %}
+{% endblock %}

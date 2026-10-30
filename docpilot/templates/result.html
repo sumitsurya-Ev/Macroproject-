@@ -8,16 +8,31 @@
 {% block content %}
 {% set pct = (doc['confidence']*100)|round(1) %}
 {% set is_filed = doc['status'] == 'filed' %}
+{% set is_pending = doc['status'] == 'pending_approval' %}
 
 <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
 
   <!-- Hero Card -->
   <div class="card result-hero">
-    <div class="result-status-badge {{ 'ok' if is_filed else 'warn' }}">
-      {{ '✓ Auto-Filed' if is_filed else '⚠ Needs Review' }}
+    <div class="result-status-badge {{ 'ok' if is_filed else ('info' if is_pending else 'warn') }}">
+      {% if is_filed %}
+        ✓ Auto-Filed
+      {% elif is_pending %}
+        ⏳ Awaiting Folder Approval
+      {% else %}
+        ⚠ Needs Review
+      {% endif %}
     </div>
     <h1>{{ doc['doc_type'] }} Detected</h1>
-    <p>{{ 'Filed automatically — ' + pct|string + '% confidence.' if is_filed else 'Confidence below 85%. Confirm in the Review Queue.' }}</p>
+    <p>
+      {% if is_filed %}
+        Filed automatically into <strong>{{ doc['destination'] }}/</strong> — {{ pct }}% confidence.
+      {% elif is_pending %}
+        High confidence ({{ pct }}%) — destination folder <strong>{{ doc['destination'] }}/</strong> requires your confirmation before creation.
+      {% else %}
+        Confidence below 85%. Confirm classification in the Review Queue.
+      {% endif %}
+    </p>
 
     <!-- Ring + Provider -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:28px">
@@ -42,6 +57,21 @@
       <div style="font-size:13px;color:var(--ink)">{{ doc['reasoning'] }}</div>
     </div>
     {% endif %}
+
+    <!-- Pending Approval Callout Banner -->
+    {% if is_pending %}
+    <div style="margin-top:20px;padding:16px 20px;background:var(--blue-dim);border:1.5px solid #C5D9FF;border-radius:8px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px">
+        <span>🔔</span> Action Required: New Folder Permission
+      </div>
+      <div style="font-size:12px;color:var(--ink);line-height:1.5;margin-bottom:14px">
+        DocPilot identified this document as <strong>{{ doc['doc_type'] }}</strong>, but folder <code>filed/{{ doc['destination'] }}/</code> does not exist yet. To protect your directory structure, DocPilot asks your approval to create this folder, choose a custom name, or add a folder description.
+      </div>
+      <div style="display:flex;gap:10px">
+        <a href="/pending" class="btn btn-blue btn-sm">Review &amp; Approve Folder Now →</a>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
   <!-- Smart Filename -->
@@ -59,7 +89,7 @@
         </div>
         <span style="color:var(--muted);font-size:18px">→</span>
         <div>
-          <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Filed As</div>
+          <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Target Name</div>
           <code style="font-size:12px;color:var(--blue);background:var(--blue-dim);padding:4px 8px;border-radius:4px;border:1px solid #C5D9FF">{{ doc['suggested_name'] }}.pdf</code>
         </div>
       </div>
@@ -83,7 +113,9 @@
     <div class="detail-cell">
       <label>Status</label>
       <div class="value">
-        <span class="chip {{ 'chip-green' if is_filed else 'chip-amber' }}">{{ 'Filed' if is_filed else 'Pending Review' }}</span>
+        <span class="chip {{ 'chip-green' if is_filed else ('chip-blue' if is_pending else 'chip-amber') }}">
+          {{ 'Filed' if is_filed else ('Pending Approval' if is_pending else 'Pending Review') }}
+        </span>
       </div>
     </div>
     <div class="detail-cell">
@@ -127,7 +159,9 @@
   <div class="card">
     <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
       <a href="/upload-page" class="btn btn-primary">⬆ Upload Another</a>
-      {% if not is_filed %}
+      {% if is_pending %}
+        <a href="/pending" class="btn btn-blue">⏳ Open Approvals Queue</a>
+      {% elif not is_filed %}
         <a href="/review" class="btn btn-blue">→ Review Queue</a>
       {% else %}
         <a href="/log" class="btn btn-ghost">▤ Filed Log</a>
