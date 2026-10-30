@@ -2,13 +2,28 @@
 {% block title %}Dashboard{% endblock %}
 {% block topbar_title %}Dashboard{% endblock %}
 {% block topbar_actions %}
-  <a href="/upload-page" class="btn btn-primary btn-sm">⬆ Upload</a>
-  <span style="font-size:11px;color:var(--muted)"><kbd>⌘U</kbd> quick upload</span>
+  <a href="/upload-page" class="btn btn-primary btn-sm">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 11V3m0 0L5 6m3-3l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Upload PDF
+  </a>
+  <span style="font-size:11px;color:var(--muted)"><kbd>⌘U</kbd></span>
 {% endblock %}
 
 {% block content %}
 
-<!-- STATS -->
+<!-- WELCOME HEADER -->
+<div style="margin-bottom:24px">
+  <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--ink)">Good to see you.</h1>
+  <p style="font-size:13px;color:var(--muted);margin-top:4px">
+    {% if stats.total == 0 %}
+      Ready for your first document — drop a PDF above to get started.
+    {% else %}
+      {{ stats.total }} document{{ 's' if stats.total != 1 }} processed · {{ stats.filed }} auto-filed.
+    {% endif %}
+  </p>
+</div>
+
+<!-- STATS GRID -->
 <div class="stats-grid">
   <div class="stat-card blue">
     <div class="stat-label">Total Processed</div>
@@ -23,7 +38,7 @@
   <div class="stat-card purple">
     <div class="stat-label">Awaiting Approval</div>
     <div class="stat-value">{{ stats.pending }}</div>
-    <div class="stat-sub">new folder confirmation</div>
+    <div class="stat-sub">new folder requests</div>
   </div>
   <div class="stat-card amber">
     <div class="stat-label">Needs Review</div>
@@ -44,46 +59,48 @@
 
     <!-- Drop Zone -->
     <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Upload Document</div>
-          <div class="card-desc">PDF is extracted, classified, and auto-filed or queued.</div>
-        </div>
-      </div>
-      <div class="card-body">
+      <div class="card-body" style="padding:20px">
         <form method="POST" action="/upload" enctype="multipart/form-data" id="upload-form">
           <div class="upload-zone" id="drop-zone">
             <input type="file" name="file" accept=".pdf" id="file-input"/>
-            <div class="upload-icon">📄</div>
-            <div class="upload-title">Drop PDF here or click to browse</div>
-            <div class="upload-sub">Invoices · Contracts · Leases · Receipts</div>
+            <!-- Paper mascot SVG -->
+            <svg width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
+              <rect x="12" y="6" width="32" height="44" rx="4" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+              <line x1="20" y1="18" x2="36" y2="18" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="20" y1="24" x2="33" y2="24" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+              <line x1="20" y1="30" x2="30" y2="30" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+              <path d="M22 44l6-4 6 4" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>
+            </svg>
+            <div class="upload-title">Drop your PDF here</div>
+            <div class="upload-sub" style="margin-top:4px">or click to browse &nbsp;·&nbsp; PDF files accepted</div>
             <div class="upload-file-tag" id="file-tag" style="display:none"></div>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Pipeline Flow -->
+    <!-- Pipeline Explainer (collapsible) -->
     <div class="card">
-      <div class="card-header"><div class="card-title">How It Works</div></div>
-      <div class="card-body" style="padding:0">
+      <button class="collapsible-toggle" onclick="toggleCollapsible(this)" aria-expanded="false">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 6v4M6 8h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        How DocPilot works
+        <span class="arrow" style="margin-left:auto">▶</span>
+      </button>
+      <div class="collapsible-content" id="pipeline-panel">
         {% set steps = [
-          ('01','Intercept','PDF arrives via upload or watched folder.'),
+          ('01','Intercept','PDF arrives via upload or a watched folder.'),
           ('02','Extract','pypdf pulls all text content from every page.'),
-          ('03','Classify','AI matches keywords, scores confidence 0–100%.'),
-          ('04','Gate','≥85% → auto-file or folder approval. <85% → review queue.'),
-          ('05','File','Moved to Invoices / Contracts / Leases / Receipts / Approved folders.')
+          ('03','Classify','AI matches content, scores confidence 0–100%.'),
+          ('04','Gate','≥ 85% → auto-file or folder approval. < 85% → review queue.'),
+          ('05','File','Moved into Invoices / Contracts / Leases / Receipts or a custom folder.')
         ] %}
         {% for num, title, desc in steps %}
-        <div style="display:flex;align-items:flex-start;gap:16px;padding:14px 20px;border-bottom:{% if not loop.last %}1px solid var(--line-2){% else %}none{% endif %}">
+        <div style="display:flex;align-items:flex-start;gap:16px;padding:12px 20px;border-bottom:{% if not loop.last %}1px solid var(--line-2){% else %}none{% endif %}">
           <span class="text-mono" style="color:var(--muted);font-size:11px;padding-top:1px;width:20px;flex-shrink:0">{{ num }}</span>
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--ink)">{{ title }}</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px">{{ desc }}</div>
           </div>
-          {% if not loop.last %}
-          <div style="margin-left:auto;color:var(--muted);font-size:16px;align-self:center">↓</div>
-          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -119,13 +136,13 @@
               </td>
               <td>
                 {% set pct = (doc['confidence']*100)|round(1) %}
-                <span class="text-mono" style="font-size:11px;color:{% if pct>=85 %}var(--green){% elif pct>=60 %}var(--amber){% else %}var(--red){% endif %}">{{ pct }}%</span>
+                <span class="text-mono" style="font-size:11px;color:{% if pct>=85 %}var(--accent-dk){% elif pct>=60 %}var(--amber){% else %}var(--red){% endif %}">{{ pct }}%</span>
               </td>
               <td>
                 {% if doc['status']=='filed' %}
                   <span class="chip chip-green">Filed</span>
                 {% elif doc['status']=='pending_approval' %}
-                  <span class="chip chip-blue">Approval</span>
+                  <span class="chip chip-amber">Approval</span>
                 {% else %}
                   <span class="chip chip-amber">Review</span>
                 {% endif %}
@@ -137,20 +154,30 @@
       </div>
       {% else %}
       <div class="empty-state">
-        <div class="empty-icon">📭</div>
-        <h3>No documents yet</h3>
-        <p>Upload a PDF to see results here.</p>
+        <!-- Paper mascot -->
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
+          <rect x="12" y="6" width="32" height="44" rx="4" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+          <line x1="20" y1="18" x2="36" y2="18" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="20" y1="24" x2="33" y2="24" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+          <line x1="20" y1="30" x2="30" y2="30" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+          <circle cx="28" cy="41" r="3.5" fill="var(--accent)" opacity=".2"/>
+          <circle cx="26.5" cy="40" r="1" fill="var(--accent-dk)"/>
+          <circle cx="29.5" cy="40" r="1" fill="var(--accent-dk)"/>
+          <path d="M27 43c.5.5 2 .5 2.5 0" stroke="var(--accent-dk)" stroke-width=".8" stroke-linecap="round"/>
+        </svg>
+        <h3>Ready for your first document</h3>
+        <p style="margin-top:6px">Upload a PDF and it will appear here with its classification result.</p>
       </div>
       {% endif %}
       {% if stats.pending > 0 %}
-      <div class="card-footer" style="background:var(--blue-dim);border-top:1px solid #C5D9FF">
-        <span style="font-size:12px;color:var(--blue);font-weight:600">🔔 {{ stats.pending }} document{{ 's' if stats.pending!=1 }} awaiting folder approval</span>
-        <a href="/pending" class="btn btn-sm btn-blue" style="margin-left:auto">Decide →</a>
+      <div class="card-footer" style="background:var(--amber-dim);border-top:1px solid #E8D5B0">
+        <span style="font-size:12px;color:var(--amber);font-weight:600">{{ stats.pending }} document{{ 's' if stats.pending!=1 }} awaiting folder approval</span>
+        <a href="/pending" class="btn btn-sm btn-primary" style="margin-left:auto">Decide →</a>
       </div>
       {% endif %}
       {% if stats.review > 0 %}
       <div class="card-footer">
-        <span style="font-size:12px;color:var(--amber);font-weight:600">⚠ {{ stats.review }} document{{ 's' if stats.review!=1 }} waiting for review</span>
+        <span style="font-size:12px;color:var(--muted);font-weight:500">{{ stats.review }} document{{ 's' if stats.review!=1 }} need review</span>
         <a href="/review" class="btn btn-sm btn-ghost" style="margin-left:auto">Review →</a>
       </div>
       {% endif %}
@@ -165,7 +192,7 @@
   <div class="card-header"><div class="card-title">Category Breakdown</div></div>
   <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
     {% for cat, count, pct in category_breakdown %}
-    <div style="padding:14px;border:1px solid var(--line);border-radius:6px">
+    <div style="padding:14px;border:1px solid var(--line);border-radius:var(--radius-sm)">
       <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">{{ cat }}</div>
       <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-0.02em">{{ count }}</div>
       <div class="conf-row" style="margin-top:10px">
@@ -181,6 +208,15 @@
 {% endif %}
 
 <script>
+function toggleCollapsible(btn) {
+  var expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', !expanded);
+  var panelId = btn.nextElementSibling.id || 'pipeline-panel';
+  var panel = document.getElementById('pipeline-panel');
+  if(!panel) panel = btn.nextElementSibling;
+  panel.classList.toggle('open', !expanded);
+}
+
 // Refresh submit button state
 document.getElementById('upload-form').addEventListener('submit',function(){
   var btn=document.getElementById('submit-btn');
@@ -191,7 +227,7 @@ var fileTag=document.getElementById('file-tag');
 if(fileInput&&fileTag){
   fileInput.addEventListener('change',function(){
     if(this.files[0]){
-      fileTag.textContent='📎 '+this.files[0].name;
+      fileTag.textContent=this.files[0].name;
       fileTag.style.display='inline-flex';
     }
   });

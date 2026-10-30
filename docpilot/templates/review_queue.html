@@ -47,7 +47,7 @@
     <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">
       {% if entities.vendor %}<span class="chip chip-slate">{{ entities.vendor[:20] }}</span>{% endif %}
       {% if entities.amount %}<span class="chip chip-green" style="font-family:'JetBrains Mono',monospace">{{ entities.amount }}</span>{% endif %}
-      {% if entities.date   %}<span class="chip chip-blue">{{ entities.date }}</span>{% endif %}
+      {% if entities.date   %}<span class="chip chip-amber">{{ entities.date }}</span>{% endif %}
       {% if entities.gstin  %}<span class="chip chip-slate" style="font-family:'JetBrains Mono',monospace;font-size:10px">{{ entities.gstin }}</span>{% endif %}
     </div>
     {% endif %}
@@ -63,7 +63,8 @@
         {% endfor %}
       </select>
       <button type="submit" class="btn btn-success btn-sm" style="margin-left:auto">
-        ✓ Confirm & File
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Confirm &amp; File
       </button>
     </form>
   </div>
@@ -73,7 +74,11 @@
 {% else %}
 <div class="card">
   <div class="empty-state">
-    <div class="empty-icon">🎉</div>
+    <!-- Success mascot -->
+    <svg width="52" height="52" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
+      <circle cx="28" cy="28" r="24" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+      <path d="M18 28l8 8 12-12" stroke="var(--accent-dk)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
     <h3>Queue is clear</h3>
     <p>Every document met the 85% confidence threshold and was auto-filed.</p>
     <div style="margin-top:20px"><a href="/upload-page" class="btn btn-primary">Upload Document</a></div>

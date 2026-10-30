@@ -488,6 +488,30 @@ def toggle_watcher():
 
 
 # ─────────────────────────────────────────────
+# CREATE FOLDER (user-initiated, no document required)
+# ─────────────────────────────────────────────
+@app.route("/folders/create", methods=["POST"])
+def create_folder():
+    """User creates a custom filing folder from the UI."""
+    folder_name = request.form.get("folder_name", "").strip()
+    description = request.form.get("description", "").strip()
+
+    if not folder_name:
+        flash("Please enter a folder name.", "error")
+        return redirect(request.referrer or url_for("settings"))
+
+    from filer import _sanitize_folder_name
+    safe_name = _sanitize_folder_name(folder_name)
+
+    dest_folder = os.path.join("filed", safe_name)
+    os.makedirs(dest_folder, exist_ok=True)
+
+    register_folder(safe_name, description=description, auto_created=False)
+    flash(f"Folder '{safe_name}' created successfully.", "success")
+    return redirect(url_for("folder_view", folder_name=safe_name))
+
+
+# ─────────────────────────────────────────────
 # FOLDER DESCRIPTION update
 # ─────────────────────────────────────────────
 @app.route("/folder/<folder_name>/describe", methods=["POST"])

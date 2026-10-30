@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -8,32 +8,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 /* ═══════════════════════════════════════
-   RESET & TOKENS
+   RESET & TOKENS  — warm, minimal palette
 ═══════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:        #0A0A0A;
-  --ink-2:      #1A1A1A;
-  --ink-3:      #2A2A2A;
-  --muted:      #6B6B6B;
-  --line:       #E5E5E5;
-  --line-2:     #F0F0F0;
+  --bg:         #F7F6F2;
+  --bg-warm:    #F0EFEB;
   --surface:    #FFFFFF;
-  --bg:         #F7F7F7;
-  --blue:       #0066FF;
-  --blue-dim:   #EEF4FF;
-  --green:      #00875A;
-  --green-dim:  #E3F5EE;
-  --amber:      #B45309;
-  --amber-dim:  #FEF3C7;
-  --red:        #CC0022;
-  --red-dim:    #FEE2E6;
+  --ink:        #252A28;
+  --ink-2:      #3A3F3C;
+  --ink-3:      #4D524F;
+  --muted:      #7A7F7C;
+  --line:       #E2E0DB;
+  --line-2:     #EDEBE7;
+  --accent:     #71917D;
+  --accent-dim: #E8F0EB;
+  --accent-dk:  #5A7A66;
+  --amber:      #B4863A;
+  --amber-dim:  #FDF5E8;
+  --red:        #BF3B3B;
+  --red-dim:    #FDECEC;
   --sidebar-w:  240px;
   --top-h:      56px;
+  --radius:     12px;
+  --radius-sm:  8px;
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
 }
 html{font-size:14px;scroll-behavior:smooth}
 body{
-  font-family:'Inter',sans-serif;
+  font-family:'Inter',system-ui,sans-serif;
   background:var(--bg);
   color:var(--ink);
   min-height:100vh;
@@ -42,60 +47,66 @@ body{
 }
 
 /* ═══════════════════════════════════════
-   SIDEBAR
+   SIDEBAR — light neutral rail
 ═══════════════════════════════════════ */
 .sidebar{
   width:var(--sidebar-w);
-  background:var(--ink);
+  background:var(--surface);
   min-height:100vh;
   position:fixed;
   top:0;left:0;
   display:flex;
   flex-direction:column;
   z-index:200;
-  border-right:1px solid var(--ink-3);
+  border-right:1px solid var(--line);
 }
 .sidebar-logo{
   padding:20px 20px 16px;
-  border-bottom:1px solid var(--ink-3);
+  border-bottom:1px solid var(--line-2);
 }
 .sidebar-logo .wordmark{
-  font-size:16px;font-weight:800;color:#fff;
+  font-size:16px;font-weight:800;color:var(--ink);
   letter-spacing:-0.04em;line-height:1;
+  display:flex;align-items:center;gap:8px;
 }
 .sidebar-logo .tagline{
-  font-size:10px;color:#555;margin-top:4px;
+  font-size:10px;color:var(--muted);margin-top:4px;
   text-transform:uppercase;letter-spacing:.08em;
 }
 .sidebar-section{
   padding:12px 0;
-  border-bottom:1px solid var(--ink-3);
+  border-bottom:1px solid var(--line-2);
 }
 .sidebar-label{
   padding:4px 20px;
-  font-size:10px;color:#444;
+  font-size:10px;color:var(--muted);
   text-transform:uppercase;letter-spacing:.1em;font-weight:600;
   margin-bottom:4px;
 }
 .nav-item{
   display:flex;align-items:center;gap:10px;
   padding:8px 20px;
-  color:#888;font-size:13px;font-weight:500;
+  color:var(--muted);font-size:13px;font-weight:500;
   text-decoration:none;
   transition:background .15s,color .15s;
   cursor:pointer;border:none;background:none;width:100%;text-align:left;
+  border-radius:0;
 }
-.nav-item:hover{background:var(--ink-3);color:#ddd}
-.nav-item.active{background:#1A1A1A;color:#fff}
-.nav-item.active .nav-dot{background:var(--blue)}
+.nav-item:hover{background:var(--bg);color:var(--ink)}
+.nav-item.active{
+  background:var(--accent-dim);
+  color:var(--accent-dk);
+  font-weight:600;
+}
+.nav-item.active .nav-dot{background:var(--accent)}
 .nav-dot{
   width:6px;height:6px;border-radius:50%;
-  background:#333;flex-shrink:0;
+  background:var(--line);flex-shrink:0;
   transition:background .15s;
 }
 .nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0}
 .nav-badge{
-  margin-left:auto;background:#FF3B30;color:#fff;
+  margin-left:auto;background:var(--red);color:#fff;
   font-size:10px;font-weight:700;
   padding:1px 6px;border-radius:10px;
   min-width:18px;text-align:center;
@@ -104,22 +115,22 @@ body{
 .sidebar-bottom{
   margin-top:auto;
   padding:16px 20px;
-  border-top:1px solid var(--ink-3);
+  border-top:1px solid var(--line-2);
 }
 .sidebar-status{
   display:flex;align-items:center;gap:8px;
 }
 .status-dot{
   width:8px;height:8px;border-radius:50%;
-  background:var(--green);
-  box-shadow:0 0 0 2px #00875A33;
-  animation:pulse 2s infinite;
+  background:var(--accent);
+  box-shadow:0 0 0 2px rgba(113,145,125,.2);
+  animation:pulse 2.5s ease-in-out infinite;
 }
 @keyframes pulse{
-  0%,100%{box-shadow:0 0 0 2px #00875A33}
-  50%{box-shadow:0 0 0 5px #00875A11}
+  0%,100%{box-shadow:0 0 0 2px rgba(113,145,125,.2)}
+  50%{box-shadow:0 0 0 5px rgba(113,145,125,.08)}
 }
-.status-text{font-size:11px;color:#555}
+.status-text{font-size:11px;color:var(--muted)}
 
 /* ═══════════════════════════════════════
    MAIN LAYOUT
@@ -158,7 +169,7 @@ body{
 .card{
   background:var(--surface);
   border:1px solid var(--line);
-  border-radius:8px;
+  border-radius:var(--radius);
   overflow:hidden;
 }
 .card-header{
@@ -191,8 +202,8 @@ body{
 .stat-card{
   background:var(--surface);
   border:1px solid var(--line);
-  border-radius:8px;
-  padding:18px 20px;
+  border-radius:var(--radius-sm);
+  padding:16px 18px;
   position:relative;
   overflow:hidden;
 }
@@ -200,25 +211,26 @@ body{
   content:'';position:absolute;
   top:0;left:0;right:0;height:2px;
 }
-.stat-card.blue::before{background:var(--blue)}
-.stat-card.green::before{background:var(--green)}
-.stat-card.amber::before{background:#F59E0B}
+.stat-card.accent::before{background:var(--accent)}
+.stat-card.green::before{background:var(--accent)}
+.stat-card.amber::before{background:var(--amber)}
 .stat-card.ink::before{background:var(--ink)}
-.stat-card.purple::before{background:#6366F1}
+.stat-card.purple::before{background:#8B7EC8}
+.stat-card.blue::before{background:var(--accent)}
 .stat-label{
   font-size:10px;font-weight:600;
   color:var(--muted);
   text-transform:uppercase;letter-spacing:.08em;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 .stat-value{
-  font-size:30px;font-weight:800;
+  font-size:28px;font-weight:800;
   color:var(--ink);
   letter-spacing:-0.03em;line-height:1;
 }
 .stat-sub{
   font-size:11px;color:var(--muted);
-  margin-top:6px;
+  margin-top:4px;
 }
 
 /* ═══════════════════════════════════════
@@ -226,23 +238,23 @@ body{
 ═══════════════════════════════════════ */
 .upload-zone{
   border:1.5px dashed var(--line);
-  border-radius:8px;
-  padding:48px 24px;
+  border-radius:var(--radius);
+  padding:44px 24px;
   text-align:center;
   transition:border-color .2s,background .2s;
   cursor:pointer;
   background:var(--surface);
   position:relative;
 }
-.upload-zone:hover{border-color:var(--blue);background:var(--blue-dim)}
-.upload-zone.dragging{border-color:var(--blue);background:var(--blue-dim);border-style:solid}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-dim)}
+.upload-zone.dragging{border-color:var(--accent);background:var(--accent-dim);border-style:solid}
 .upload-zone input[type=file]{
   position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
 }
 .upload-icon{
   width:48px;height:48px;
-  background:var(--ink);
-  border-radius:12px;
+  background:var(--accent-dim);
+  border-radius:var(--radius);
   display:inline-flex;align-items:center;justify-content:center;
   font-size:22px;margin-bottom:14px;
 }
@@ -251,10 +263,10 @@ body{
 .upload-file-tag{
   display:inline-flex;align-items:center;gap:6px;
   margin-top:12px;padding:6px 12px;
-  background:var(--blue-dim);
-  border:1px solid #C5D9FF;
+  background:var(--accent-dim);
+  border:1px solid #C3D6C9;
   border-radius:6px;
-  font-size:12px;font-weight:600;color:var(--blue);
+  font-size:12px;font-weight:600;color:var(--accent-dk);
   font-family:'JetBrains Mono',monospace;
 }
 
@@ -264,25 +276,26 @@ body{
 .btn{
   display:inline-flex;align-items:center;gap:6px;
   padding:0 16px;height:36px;
-  border-radius:6px;font-size:13px;font-weight:600;
+  border-radius:var(--radius-sm);font-size:13px;font-weight:600;
   font-family:'Inter',sans-serif;
   cursor:pointer;border:none;text-decoration:none;
   transition:opacity .15s,transform .1s;
   white-space:nowrap;
 }
 .btn:active{transform:scale(.97)}
-.btn-primary{background:var(--ink);color:#fff}
-.btn-primary:hover{opacity:.85}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-blue:hover{opacity:.85}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dk)}
+.btn-blue{background:var(--accent);color:#fff}
+.btn-blue:hover{background:var(--accent-dk)}
 .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn-ghost:hover{border-color:var(--ink);background:var(--bg)}
-.btn-success{background:var(--green);color:#fff}
-.btn-success:hover{opacity:.85}
+.btn-success{background:var(--accent);color:#fff}
+.btn-success:hover{background:var(--accent-dk)}
 .btn-danger{background:var(--red);color:#fff}
 .btn-danger:hover{opacity:.85}
 .btn-full{width:100%;justify-content:center;height:44px;font-size:14px}
-.btn-sm{height:30px;padding:0 12px;font-size:12px;border-radius:5px}
+.btn-sm{height:30px;padding:0 12px;font-size:12px;border-radius:6px}
 .btn-icon{width:36px;height:36px;padding:0;justify-content:center}
 .btn[disabled]{opacity:.4;pointer-events:none}
 
@@ -295,12 +308,13 @@ body{
   font-size:11px;font-weight:600;
   letter-spacing:.01em;font-family:'JetBrains Mono',monospace;
 }
-.chip-blue {background:var(--blue-dim);color:var(--blue);border:1px solid #C5D9FF}
-.chip-green{background:var(--green-dim);color:var(--green);border:1px solid #AADCC8}
-.chip-amber{background:var(--amber-dim);color:var(--amber);border:1px solid #FDE68A}
-.chip-slate{background:#F4F4F5;color:#52525B;border:1px solid #E4E4E7}
-.chip-red  {background:var(--red-dim);color:var(--red);border:1px solid #FCA5B0}
-.chip-ink  {background:var(--ink);color:#fff;border:1px solid var(--ink)}
+.chip-accent{background:var(--accent-dim);color:var(--accent-dk);border:1px solid #C3D6C9}
+.chip-blue  {background:var(--accent-dim);color:var(--accent-dk);border:1px solid #C3D6C9}
+.chip-green {background:var(--accent-dim);color:var(--accent-dk);border:1px solid #C3D6C9}
+.chip-amber {background:var(--amber-dim);color:var(--amber);border:1px solid #E8D5B0}
+.chip-slate {background:#F2F1ED;color:#52564F;border:1px solid #DDDBD6}
+.chip-red   {background:var(--red-dim);color:var(--red);border:1px solid #E8B0B0}
+.chip-ink   {background:var(--ink);color:#fff;border:1px solid var(--ink)}
 
 /* ═══════════════════════════════════════
    CONFIDENCE BAR
@@ -338,7 +352,7 @@ td{
 }
 tbody tr:last-child td{border-bottom:none}
 tbody tr{transition:background .1s}
-tbody tr:hover td{background:#FAFAFA}
+tbody tr:hover td{background:var(--bg)}
 .td-filename{
   font-weight:600;font-size:12px;
   max-width:200px;overflow:hidden;
@@ -362,16 +376,16 @@ tbody tr:hover td{background:#FAFAFA}
   display:flex;align-items:center;gap:12px;
   padding:12px 16px;
   background:var(--ink);color:#fff;
-  border-radius:8px;
+  border-radius:var(--radius-sm);
   font-size:13px;font-weight:500;
-  box-shadow:0 4px 24px rgba(0,0,0,.25);
+  box-shadow:0 4px 24px rgba(0,0,0,.12);
   min-width:260px;max-width:380px;
-  animation:slideUp .3s cubic-bezier(.16,1,.3,1) forwards;
+  animation:slideUp .2s ease-out forwards;
 }
-.toast.success{background:#003D28;border-left:3px solid var(--green)}
-.toast.error  {background:#3D0010;border-left:3px solid var(--red)}
+.toast.success{background:#1B4332;border-left:3px solid var(--accent)}
+.toast.error  {background:#4A1C1C;border-left:3px solid var(--red)}
 @keyframes slideUp{
-  from{opacity:0;transform:translateY(20px)}
+  from{opacity:0;transform:translateY(12px)}
   to  {opacity:1;transform:translateY(0)}
 }
 
@@ -380,13 +394,13 @@ tbody tr:hover td{background:#FAFAFA}
 ═══════════════════════════════════════ */
 .review-row{
   border:1px solid var(--line);
-  border-radius:8px;
+  border-radius:var(--radius);
   background:var(--surface);
   margin-bottom:10px;
   overflow:hidden;
   transition:border-color .15s;
 }
-.review-row:hover{border-color:#C5D9FF}
+.review-row:hover{border-color:var(--accent)}
 .review-row-head{
   padding:14px 20px;
   display:flex;align-items:center;gap:12px;
@@ -404,19 +418,19 @@ tbody tr:hover td{background:#FAFAFA}
    RESULT PAGE
 ═══════════════════════════════════════ */
 .result-hero{
-  text-align:center;padding:52px 32px 40px;
+  text-align:center;padding:48px 32px 36px;
 }
 .result-status-badge{
   display:inline-flex;align-items:center;gap:8px;
-  padding:8px 16px;border-radius:6px;
+  padding:8px 16px;border-radius:var(--radius-sm);
   font-size:13px;font-weight:700;
   margin-bottom:20px;
 }
-.result-status-badge.ok  {background:var(--green-dim);color:var(--green);border:1.5px solid #AADCC8}
-.result-status-badge.info{background:var(--blue-dim);color:var(--blue);border:1.5px solid #C5D9FF}
-.result-status-badge.warn{background:var(--amber-dim);color:var(--amber);border:1.5px solid #FDE68A}
+.result-status-badge.ok  {background:var(--accent-dim);color:var(--accent-dk);border:1.5px solid #C3D6C9}
+.result-status-badge.info{background:#E8F0EB;color:var(--accent-dk);border:1.5px solid #C3D6C9}
+.result-status-badge.warn{background:var(--amber-dim);color:var(--amber);border:1.5px solid #E8D5B0}
 .result-hero h1{
-  font-size:28px;font-weight:800;
+  font-size:26px;font-weight:800;
   letter-spacing:-0.04em;color:var(--ink);
   margin-bottom:8px;
 }
@@ -424,7 +438,7 @@ tbody tr:hover td{background:#FAFAFA}
 .detail-grid{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:1px;background:var(--line);
-  border:1px solid var(--line);border-radius:8px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
   overflow:hidden;margin-top:32px;
 }
 .detail-cell{
@@ -446,11 +460,11 @@ tbody tr:hover td{background:#FAFAFA}
 ═══════════════════════════════════════ */
 .search-box{
   display:flex;align-items:center;gap:8px;
-  border:1px solid var(--line);border-radius:6px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
   padding:0 12px;background:var(--surface);height:36px;
   transition:border-color .15s;
 }
-.search-box:focus-within{border-color:var(--blue)}
+.search-box:focus-within{border-color:var(--accent)}
 .search-box input{
   border:none;outline:none;font-size:13px;
   font-family:'Inter',sans-serif;color:var(--ink);
@@ -462,7 +476,7 @@ tbody tr:hover td{background:#FAFAFA}
    EMPTY STATE
 ═══════════════════════════════════════ */
 .empty-state{
-  text-align:center;padding:64px 32px;
+  text-align:center;padding:56px 32px;
 }
 .empty-icon{
   width:56px;height:56px;
@@ -472,24 +486,31 @@ tbody tr:hover td{background:#FAFAFA}
   font-size:24px;margin-bottom:16px;
   background:var(--bg);
 }
-.empty-state h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.empty-state h3{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--ink)}
 .empty-state p{font-size:13px;color:var(--muted)}
+
+/* ═══════════════════════════════════════
+   PAPER MASCOT SVG  — used in empty states
+═══════════════════════════════════════ */
+.mascot-paper{
+  display:inline-block;width:56px;height:56px;margin-bottom:12px;
+}
 
 /* ═══════════════════════════════════════
    SELECT
 ═══════════════════════════════════════ */
 select{
   height:36px;padding:0 10px;
-  border:1px solid var(--line);border-radius:6px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
   font-size:13px;font-family:'Inter',sans-serif;
   color:var(--ink);background:var(--surface);cursor:pointer;
   appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B6B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7F7C' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center;
   padding-right:30px;
   transition:border-color .15s;
 }
-select:focus{outline:2px solid var(--blue);outline-offset:1px}
+select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 /* ═══════════════════════════════════════
    KEYBOARD SHORTCUT HINT
@@ -521,6 +542,75 @@ kbd{
 }
 
 /* ═══════════════════════════════════════
+   FORM INPUTS
+═══════════════════════════════════════ */
+input[type=text],input[type=password]{
+  height:36px;padding:0 12px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  font-size:13px;font-family:'Inter',sans-serif;
+  color:var(--ink);background:var(--surface);
+  transition:border-color .15s;
+  outline:none;
+}
+input[type=text]:focus,input[type=password]:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(113,145,125,.15);
+}
+textarea{
+  padding:10px 12px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  font-size:13px;font-family:'Inter',sans-serif;
+  color:var(--ink);background:var(--surface);
+  resize:vertical;outline:none;
+  transition:border-color .15s;
+}
+textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(113,145,125,.15);
+}
+
+/* ═══════════════════════════════════════
+   MODAL / DIALOG
+═══════════════════════════════════════ */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(37,42,40,.4);
+  z-index:1000;display:none;align-items:center;justify-content:center;
+  animation:fadeIn .15s ease-out;
+}
+.modal-backdrop.open{display:flex}
+.modal-box{
+  background:var(--surface);
+  border-radius:var(--radius);
+  box-shadow:0 8px 40px rgba(0,0,0,.15);
+  padding:28px;
+  width:100%;max-width:440px;
+  animation:slideUp .2s ease-out;
+}
+.modal-box h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal-box p{font-size:13px;color:var(--muted);margin-bottom:20px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ═══════════════════════════════════════
+   COLLAPSIBLE
+═══════════════════════════════════════ */
+.collapsible-toggle{
+  cursor:pointer;display:flex;align-items:center;gap:8px;
+  padding:14px 20px;
+  font-size:13px;font-weight:600;color:var(--ink);
+  background:none;border:none;width:100%;text-align:left;
+  font-family:'Inter',sans-serif;
+}
+.collapsible-toggle:hover{background:var(--bg)}
+.collapsible-toggle .arrow{
+  transition:transform .2s;font-size:10px;color:var(--muted);
+}
+.collapsible-toggle[aria-expanded="true"] .arrow{transform:rotate(90deg)}
+.collapsible-content{
+  overflow:hidden;max-height:0;transition:max-height .2s ease-out;
+}
+.collapsible-content.open{max-height:600px}
+
+/* ═══════════════════════════════════════
    UTILITY
 ═══════════════════════════════════════ */
 .flex{display:flex}.items-center{align-items:center}
@@ -535,18 +625,33 @@ kbd{
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
-::-webkit-scrollbar-thumb:hover{background:#ccc}
+::-webkit-scrollbar-thumb:hover{background:#bbb}
 
 /* ═══════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════ */
+.mobile-toggle{
+  display:none;background:none;border:none;font-size:22px;
+  cursor:pointer;color:var(--ink);padding:8px;
+}
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);transition:transform .25s}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0}
   .stats-grid{grid-template-columns:1fr 1fr}
   .content{padding:16px}
+  .mobile-toggle{display:block}
 }
+
+/* ═══════════════════════════════════════
+   UPLOAD SUCCESS ANIMATION
+═══════════════════════════════════════ */
+@keyframes successPop{
+  0%{transform:scale(.95);opacity:0}
+  60%{transform:scale(1.02)}
+  100%{transform:scale(1);opacity:1}
+}
+.upload-success{animation:successPop .2s ease-out}
 </style>
 </head>
 <body>
@@ -554,33 +659,56 @@ kbd{
 <!-- ── SIDEBAR ── -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="wordmark">DocPilot</div>
+    <div class="wordmark">
+      <!-- Inline paper mascot logo -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="2" width="16" height="20" rx="2" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+        <line x1="8" y1="8" x2="16" y2="8" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="8" y1="12" x2="14" y2="12" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="8" y1="16" x2="12" y2="16" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      DocPilot
+    </div>
     <div class="tagline">Intelligent Filing System</div>
   </div>
 
   <nav class="sidebar-section">
     <div class="sidebar-label">Workspace</div>
     <a href="/" class="nav-item {% if request.path=='/' %}active{% endif %}">
-      <span class="nav-icon">⬛</span>
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+      </span>
       Dashboard
     </a>
     <a href="/upload-page" class="nav-item {% if request.path=='/upload-page' %}active{% endif %}">
-      <span class="nav-icon">⬆</span>
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 11V3m0 0L5 6m3-3l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
       Upload
     </a>
   </nav>
 
   <nav class="sidebar-section">
     <div class="sidebar-label">Documents</div>
+    <a href="/pending" class="nav-item {% if request.path=='/pending' %}active{% endif %}">
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+      Approvals
+      {% if pending_count|default(0) > 0 %}<span class="nav-badge" style="background:var(--accent)">{{ pending_count }}</span>{% endif %}
+    </a>
     <a href="/review" class="nav-item {% if request.path=='/review' %}active{% endif %}">
-    <a href="/pending" class="nav-item {% if request.path=='/pending' %}active{% endif %}">       <span class="nav-icon">🔔</span>       Approvals       {% if pending_count|default(0) > 0 %}<span class="nav-badge" style="background:var(--blue)">{{ pending_count }}</span>{% endif %}     </a>
-      <span class="nav-icon">◐</span>
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r=".75" fill="currentColor"/></svg>
+      </span>
       Review Queue
       {% set q_count = review_count|default(0) %}
       {% if q_count > 0 %}<span class="nav-badge">{{ q_count }}</span>{% endif %}
     </a>
     <a href="/log" class="nav-item {% if request.path=='/log' %}active{% endif %}">
-      <span class="nav-icon">▤</span>
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 3h10M3 6.5h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
       Filed Log
     </a>
   </nav>
@@ -588,21 +716,34 @@ kbd{
   <!-- Dynamic Folders -->
   {% if all_folders %}
   <nav class="sidebar-section" style="flex:1;overflow-y:auto">
-    <div class="sidebar-label">📁 Filing Folders</div>
+    <div class="sidebar-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:16px">
+      Filing Folders
+      <button onclick="document.getElementById('create-folder-modal').classList.add('open')" class="btn btn-ghost" style="height:22px;padding:0 8px;font-size:10px;border-radius:4px;font-weight:600;gap:2px">+ New</button>
+    </div>
     {% for folder in all_folders %}
     <a href="/folder/{{ folder }}" class="nav-item {% if request.path=='/folder/'+folder %}active{% endif %}"
        style="font-size:11px;padding:6px 20px">
-      <span style="font-size:11px;color:#444">▸</span>
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4.5A1.5 1.5 0 013.5 3H6l1.5 1.5h5A1.5 1.5 0 0114 6v6.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5v-8z" stroke="currentColor" stroke-width="1.3"/></svg>
       {{ folder.replace('_',' ') }}
     </a>
     {% endfor %}
+  </nav>
+  {% else %}
+  <nav class="sidebar-section" style="flex:1">
+    <div class="sidebar-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:16px">
+      Filing Folders
+      <button onclick="document.getElementById('create-folder-modal').classList.add('open')" class="btn btn-ghost" style="height:22px;padding:0 8px;font-size:10px;border-radius:4px;font-weight:600;gap:2px">+ New</button>
+    </div>
+    <div style="padding:8px 20px;font-size:11px;color:var(--muted)">No folders yet</div>
   </nav>
   {% endif %}
 
   <nav class="sidebar-section">
     <div class="sidebar-label">System</div>
     <a href="/settings" class="nav-item {% if request.path=='/settings' %}active{% endif %}">
-      <span class="nav-icon">⚙</span>
+      <span class="nav-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2m0 10v2m-5-7H1m14 0h-2M3.05 3.05l1.41 1.41m7.08 7.08l1.41 1.41M3.05 12.95l1.41-1.41m7.08-7.08l1.41-1.41" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </span>
       Settings
     </a>
   </nav>
@@ -613,11 +754,11 @@ kbd{
       <span class="status-text">System Online</span>
     </div>
     {% if ai_status is defined %}
-    <div style="margin-top:10px;padding:8px 10px;background:#111;border-radius:6px;border:1px solid #222">
-      <div style="font-size:9px;color:#444;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px">AI Engine</div>
+    <div style="margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--line-2)">
+      <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:4px">AI Engine</div>
       <div style="display:flex;align-items:center;gap:6px">
-        <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:{% if ai_status.active %}#00875A{% else %}#555{% endif %}"></div>
-        <span style="font-size:10px;color:{% if ai_status.active %}#4ADE80{% else %}#666{% endif %};font-weight:600;line-height:1.3">
+        <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:{% if ai_status.active %}var(--accent){% else %}var(--muted){% endif %}"></div>
+        <span style="font-size:10px;color:{% if ai_status.active %}var(--accent-dk){% else %}var(--muted){% endif %};font-weight:600;line-height:1.3">
           {{ ai_status.label }}
         </span>
       </div>
@@ -626,11 +767,40 @@ kbd{
   </div>
 </aside>
 
+<!-- ── CREATE FOLDER MODAL ── -->
+<div class="modal-backdrop" id="create-folder-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <h2>Create a new folder</h2>
+    <p>Add a custom filing folder. Documents can be filed here manually or by AI.</p>
+    <form method="POST" action="/folders/create">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px">Folder name</label>
+          <input type="text" name="folder_name" placeholder="e.g. Tax Documents, Client Briefs" required
+                 style="width:100%"/>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px">Description <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <textarea name="description" placeholder="What kind of files belong in this folder?" rows="2"
+                    style="width:100%"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+          <button type="button" class="btn btn-ghost" onclick="this.closest('.modal-backdrop').classList.remove('open')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Folder</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ── MAIN ── -->
 <div class="main">
 
   <!-- Topbar -->
   <header class="topbar">
+    <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Toggle menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
     <span class="topbar-crumb">DocPilot</span>
     <span style="color:var(--line)">›</span>
     <span class="topbar-title">{% block topbar_title %}{% endblock %}</span>
@@ -652,13 +822,31 @@ kbd{
   <div class="toast-stack" id="toast-stack">
     {% for category, message in messages %}
     <div class="toast {{ category }}">
-      {% if category == 'success' %}✓{% else %}✕{% endif %}
+      {% if category == 'success' %}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.5"/><path d="M5.5 8l2 2 3-3.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      {% else %}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.5"/><path d="M6 6l4 4M10 6l-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      {% endif %}
       {{ message }}
     </div>
     {% endfor %}
   </div>
   {% endif %}
 {% endwith %}
+
+<!-- ── INLINE MASCOT SVG TEMPLATE ── -->
+<template id="mascot-svg">
+  <svg class="mascot-paper" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="12" y="6" width="32" height="44" rx="4" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
+    <line x1="20" y1="18" x2="36" y2="18" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="20" y1="24" x2="33" y2="24" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+    <line x1="20" y1="30" x2="30" y2="30" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+    <circle cx="28" cy="40" r="3" fill="var(--accent)" opacity=".3"/>
+    <circle cx="26" cy="39" r="1" fill="var(--accent-dk)"/>
+    <circle cx="30" cy="39" r="1" fill="var(--accent-dk)"/>
+    <path d="M26.5 42c.5.5 2.5.5 3 0" stroke="var(--accent-dk)" stroke-width=".8" stroke-linecap="round"/>
+  </svg>
+</template>
 
 <script>
 // Auto-dismiss toasts
@@ -688,7 +876,7 @@ document.addEventListener('DOMContentLoaded',function(){
           if(inp){
             try{inp.files=e.dataTransfer.files}catch(err){}
             var tag=zone.querySelector('.upload-file-tag');
-            if(tag)tag.textContent='📎 '+e.dataTransfer.files[0].name;
+            if(tag){tag.textContent=e.dataTransfer.files[0].name;tag.style.display='inline-flex'}
             // auto-submit
             var form=zone.closest('form');
             if(form)form.submit();
@@ -701,7 +889,7 @@ document.addEventListener('DOMContentLoaded',function(){
       inp.addEventListener('change',function(){
         if(inp.files[0]){
           var tag=zone.querySelector('.upload-file-tag');
-          if(tag)tag.textContent='📎 '+inp.files[0].name;
+          if(tag){tag.textContent=inp.files[0].name;tag.style.display='inline-flex'}
           var form=zone.closest('form');
           if(form)setTimeout(function(){form.submit()},400);
         }
@@ -712,7 +900,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // Animate confidence bars
   document.querySelectorAll('.conf-fill[data-pct]').forEach(function(el){
     var pct=parseFloat(el.dataset.pct);
-    var color=pct>=85?'#00875A':pct>=60?'#F59E0B':'#CC0022';
+    var color=pct>=85?'var(--accent)':pct>=60?'var(--amber)':'var(--red)';
     el.style.background=color;
     el.style.width='0%';
     setTimeout(function(){el.style.width=pct+'%'},100);
@@ -726,7 +914,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var circ=2*Math.PI*r;
     el.style.strokeDasharray=circ;
     el.style.strokeDashoffset=circ; // start fully hidden
-    el.style.stroke=pct>=85?'#00875A':pct>=60?'#F59E0B':'#CC0022';
+    el.style.stroke=pct>=85?'var(--accent)':pct>=60?'var(--amber)':'var(--red)';
     setTimeout(function(){el.style.strokeDashoffset=circ*(1-pct/100)},120);
   });
 
@@ -747,6 +935,14 @@ document.addEventListener('keydown',function(e){
   if((e.metaKey||e.ctrlKey)&&e.key==='u'){e.preventDefault();window.location='/upload-page'}
   if((e.metaKey||e.ctrlKey)&&e.key==='l'){e.preventDefault();window.location='/log'}
   if((e.metaKey||e.ctrlKey)&&e.key==='r'){e.preventDefault();window.location='/review'}
+});
+
+// Close modal on Escape
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    var modals=document.querySelectorAll('.modal-backdrop.open');
+    modals.forEach(function(m){m.classList.remove('open')});
+  }
 });
 </script>
 </body>

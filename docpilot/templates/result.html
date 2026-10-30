@@ -2,7 +2,7 @@
 {% block title %}Result — {{ doc['filename'] }}{% endblock %}
 {% block topbar_title %}Classification Result{% endblock %}
 {% block topbar_actions %}
-  <a href="/upload-page" class="btn btn-ghost btn-sm">⬆ Upload another</a>
+  <a href="/upload-page" class="btn btn-ghost btn-sm">Upload another</a>
 {% endblock %}
 
 {% block content %}
@@ -13,14 +13,17 @@
 <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
 
   <!-- Hero Card -->
-  <div class="card result-hero">
+  <div class="card result-hero upload-success">
     <div class="result-status-badge {{ 'ok' if is_filed else ('info' if is_pending else 'warn') }}">
       {% if is_filed %}
-        ✓ Auto-Filed
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 8l2 2 3-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Auto-Filed
       {% elif is_pending %}
-        ⏳ Awaiting Folder Approval
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Awaiting Folder Approval
       {% else %}
-        ⚠ Needs Review
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11" r=".75" fill="currentColor"/></svg>
+        Needs Review
       {% endif %}
     </div>
     <h1>{{ doc['doc_type'] }} Detected</h1>
@@ -43,33 +46,32 @@
         </svg>
         <div class="ring-label">{{ pct }}%</div>
       </div>
-      <span class="chip chip-ink" style="font-size:10px">
-        {% if doc['provider'] == 'gemini' %}🤖 Google Gemini AI
-        {% elif doc['provider'] == 'openai' %}🤖 OpenAI GPT
-        {% else %}🔑 Keyword Classifier{% endif %}
+      <span class="chip chip-slate" style="font-size:10px">
+        {% if doc['provider'] == 'gemini' %}✦ Google Gemini AI
+        {% elif doc['provider'] == 'openai' %}⬡ OpenAI GPT
+        {% else %}⌨ Keyword Classifier{% endif %}
       </span>
     </div>
 
     <!-- AI Reasoning -->
     {% if doc['reasoning'] %}
-    <div style="margin-top:20px;padding:12px 16px;background:var(--bg);border:1px solid var(--line);border-radius:6px;text-align:left;max-width:480px;margin-left:auto;margin-right:auto">
+    <div style="margin-top:20px;padding:12px 16px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);text-align:left;max-width:480px;margin-left:auto;margin-right:auto">
       <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">AI Reasoning</div>
       <div style="font-size:13px;color:var(--ink)">{{ doc['reasoning'] }}</div>
     </div>
     {% endif %}
 
-    <!-- Pending Approval Callout Banner -->
+    <!-- Pending Approval Callout -->
     {% if is_pending %}
-    <div style="margin-top:20px;padding:16px 20px;background:var(--blue-dim);border:1.5px solid #C5D9FF;border-radius:8px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto">
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px">
-        <span>🔔</span> Action Required: New Folder Permission
+    <div style="margin-top:20px;padding:16px 20px;background:var(--amber-dim);border:1.5px solid #E8D5B0;border-radius:var(--radius-sm);text-align:left;max-width:520px;margin-left:auto;margin-right:auto">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--amber);margin-bottom:6px">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Action Required: New Folder Permission
       </div>
       <div style="font-size:12px;color:var(--ink);line-height:1.5;margin-bottom:14px">
-        DocPilot identified this document as <strong>{{ doc['doc_type'] }}</strong>, but folder <code>filed/{{ doc['destination'] }}/</code> does not exist yet. To protect your directory structure, DocPilot asks your approval to create this folder, choose a custom name, or add a folder description.
+        DocPilot identified this as <strong>{{ doc['doc_type'] }}</strong>, but folder <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface);padding:1px 5px;border-radius:3px">filed/{{ doc['destination'] }}/</code> does not exist yet. Your approval is needed to create it.
       </div>
-      <div style="display:flex;gap:10px">
-        <a href="/pending" class="btn btn-blue btn-sm">Review &amp; Approve Folder Now →</a>
-      </div>
+      <a href="/pending" class="btn btn-primary btn-sm">Review &amp; Approve Folder →</a>
     </div>
     {% endif %}
   </div>
@@ -79,7 +81,7 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title">Smart Rename</div>
-      <div class="card-desc">AI generated a descriptive filename based on document content</div>
+      <div class="card-desc">AI-generated descriptive filename based on document content</div>
     </div>
     <div class="card-body">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -89,8 +91,8 @@
         </div>
         <span style="color:var(--muted);font-size:18px">→</span>
         <div>
-          <div style="font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Target Name</div>
-          <code style="font-size:12px;color:var(--blue);background:var(--blue-dim);padding:4px 8px;border-radius:4px;border:1px solid #C5D9FF">{{ doc['suggested_name'] }}.pdf</code>
+          <div style="font-size:10px;font-weight:600;color:var(--accent-dk);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Suggested Name</div>
+          <code style="font-size:12px;color:var(--accent-dk);background:var(--accent-dim);padding:4px 8px;border-radius:4px;border:1px solid #C3D6C9">{{ doc['suggested_name'] }}.pdf</code>
         </div>
       </div>
     </div>
@@ -101,7 +103,7 @@
   <div class="detail-grid">
     <div class="detail-cell">
       <label>Destination</label>
-      <div class="value text-mono" style="font-size:12px;color:var(--blue)">filed/{{ doc['destination'] }}/</div>
+      <div class="value text-mono" style="font-size:12px;color:var(--accent-dk)">filed/{{ doc['destination'] }}/</div>
     </div>
     <div class="detail-cell">
       <label>Category</label>
@@ -113,7 +115,7 @@
     <div class="detail-cell">
       <label>Status</label>
       <div class="value">
-        <span class="chip {{ 'chip-green' if is_filed else ('chip-blue' if is_pending else 'chip-amber') }}">
+        <span class="chip {{ 'chip-green' if is_filed else ('chip-amber' if is_pending else 'chip-amber') }}">
           {{ 'Filed' if is_filed else ('Pending Approval' if is_pending else 'Pending Review') }}
         </span>
       </div>
@@ -158,15 +160,15 @@
   <!-- Actions -->
   <div class="card">
     <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
-      <a href="/upload-page" class="btn btn-primary">⬆ Upload Another</a>
+      <a href="/upload-page" class="btn btn-primary">Upload Another</a>
       {% if is_pending %}
-        <a href="/pending" class="btn btn-blue">⏳ Open Approvals Queue</a>
+        <a href="/pending" class="btn btn-ghost">Open Approvals</a>
       {% elif not is_filed %}
-        <a href="/review" class="btn btn-blue">→ Review Queue</a>
+        <a href="/review" class="btn btn-ghost">Review Queue</a>
       {% else %}
-        <a href="/log" class="btn btn-ghost">▤ Filed Log</a>
+        <a href="/log" class="btn btn-ghost">Filed Log</a>
       {% endif %}
-      <a href="/" class="btn btn-ghost">⬛ Dashboard</a>
+      <a href="/" class="btn btn-ghost">Dashboard</a>
     </div>
   </div>
 
