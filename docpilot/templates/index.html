@@ -3,7 +3,7 @@
 {% block topbar_title %}Dashboard{% endblock %}
 {% block topbar_actions %}
   <a href="/upload-page" class="btn btn-primary btn-sm">
-    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 11V3m0 0L5 6m3-3l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 11V3m0 0L5 6m3-3l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     Upload PDF
   </a>
   <span style="font-size:11px;color:var(--muted)"><kbd>⌘U</kbd></span>
@@ -16,7 +16,7 @@
   <h1 style="font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--ink)">Good to see you.</h1>
   <p style="font-size:13px;color:var(--muted);margin-top:4px">
     {% if stats.total == 0 %}
-      Ready for your first document - drop a PDF above to get started.
+      Ready for your first document — drop a PDF above to get started.
     {% else %}
       {{ stats.total }} document{{ 's' if stats.total != 1 }} processed · {{ stats.filed }} auto-filed.
     {% endif %}
@@ -64,7 +64,7 @@
           <div class="upload-zone" id="drop-zone">
             <input type="file" name="file" accept=".pdf" id="file-input"/>
             <!-- Paper mascot SVG -->
-            <svg aria-hidden="true" width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
+            <svg width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
               <rect x="12" y="6" width="32" height="44" rx="4" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
               <line x1="20" y1="18" x2="36" y2="18" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
               <line x1="20" y1="24" x2="33" y2="24" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
@@ -82,15 +82,15 @@
     <!-- Pipeline Explainer (collapsible) -->
     <div class="card">
       <button class="collapsible-toggle" onclick="toggleCollapsible(this)" aria-expanded="false">
-        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 6v4M6 8h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 6v4M6 8h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         How DocPilot works
-        <span class="arrow" style="margin-left:auto"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="arrow" style="margin-left:auto">▶</span>
       </button>
       <div class="collapsible-content" id="pipeline-panel">
         {% set steps = [
           ('01','Intercept','PDF arrives via upload or a watched folder.'),
           ('02','Extract','pypdf pulls all text content from every page.'),
-          ('03','Classify','AI matches content, scores confidence 0-100%.'),
+          ('03','Classify','AI matches content, scores confidence 0–100%.'),
           ('04','Gate','≥ 85% → auto-file or folder approval. < 85% → review queue.'),
           ('05','File','Moved into Invoices / Contracts / Leases / Receipts or a custom folder.')
         ] %}
@@ -113,7 +113,7 @@
     <div class="card">
       <div class="card-header" style="justify-content:space-between">
         <div class="card-title">Recent Activity</div>
-        <a href="/log" class="btn btn-ghost btn-sm">View all</a>
+        <a href="/log" class="btn btn-ghost btn-sm">View all →</a>
       </div>
       {% if recent %}
       <div class="table-wrap">
@@ -155,7 +155,7 @@
       {% else %}
       <div class="empty-state">
         <!-- Paper mascot -->
-        <svg aria-hidden="true" width="52" height="52" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
           <rect x="12" y="6" width="32" height="44" rx="4" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
           <line x1="20" y1="18" x2="36" y2="18" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
           <line x1="20" y1="24" x2="33" y2="24" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
@@ -170,15 +170,15 @@
       </div>
       {% endif %}
       {% if stats.pending > 0 %}
-      <div class="card-footer" style="background:var(--amber-dim);border-top:1px solid var(--amber)">
+      <div class="card-footer" style="background:var(--amber-dim);border-top:1px solid #E8D5B0">
         <span style="font-size:12px;color:var(--amber);font-weight:600">{{ stats.pending }} document{{ 's' if stats.pending!=1 }} awaiting folder approval</span>
-        <a href="/pending" class="btn btn-sm btn-primary" style="margin-left:auto">Decide</a>
+        <a href="/pending" class="btn btn-sm btn-primary" style="margin-left:auto">Decide →</a>
       </div>
       {% endif %}
       {% if stats.review > 0 %}
       <div class="card-footer">
         <span style="font-size:12px;color:var(--muted);font-weight:500">{{ stats.review }} document{{ 's' if stats.review!=1 }} need review</span>
-        <a href="/review" class="btn btn-sm btn-ghost" style="margin-left:auto">Review</a>
+        <a href="/review" class="btn btn-sm btn-ghost" style="margin-left:auto">Review →</a>
       </div>
       {% endif %}
     </div>
