@@ -11,14 +11,14 @@ import shutil
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 
 from database import (
-    init_db, insert_document, get_document, get_review_queue,
+    init_db, insert_document, get_document, get_review_queue, get_document_by_hash,
     get_filed_log, get_all_documents, update_document_status,
     get_stats, check_duplicate, get_pending_approvals,
     get_pending_approvals_count, register_folder, get_all_folder_metadata,
     update_folder_description, get_watcher_folders, add_watcher_folder,
     toggle_watcher_folder, remove_watcher_folder,
 )
-from extractor    import extract_text, is_pdf
+from extractor    import extract_text, is_pdf, is_supported_document
 from ai_classifier import ai_classify, get_provider_status, get_all_known_types
 from filer        import (
     file_document, get_destination_folder, ensure_folders,
@@ -140,17 +140,29 @@ def upload_page():
 # ─────────────────────────────────────────────
 @app.route("/upload", methods=["POST"])
 def upload():
+    is_ajax = (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.args.get("json") == "1"
+        or "application/json" in request.headers.get("Accept", "")
+    )
+
     if "file" not in request.files:
+        if is_ajax:
+            return jsonify({"success": False, "error": "No file selected."}), 400
         flash("No file selected.", "error")
         return redirect(url_for("upload_page"))
 
     file = request.files["file"]
     if file.filename == "":
+        if is_ajax:
+            return jsonify({"success": False, "error": "No file selected."}), 400
         flash("No file selected.", "error")
         return redirect(url_for("upload_page"))
 
-    if not is_pdf(file.filename):
-        flash("Only PDF files are supported right now.", "error")
+    if not is_supported_document(file.filename):
+        if is_ajax:
+            return jsonify({"success": False, "error": "Supported formats: PDF, PNG, JPG, JPEG, WebP."}), 400
+        flash("Supported formats: PDF, PNG, JPG, JPEG, WebP.", "error")
         return redirect(url_for("upload_page"))
 
     # ── Save temporarily ──
@@ -161,10 +173,29 @@ def upload():
     with open(save_path, "rb") as f:
         file_hash = hashlib.sha256(f.read()).hexdigest()
 
-    if check_duplicate(file_hash):
+    existing = get_document_by_hash(file_hash)
+    if existing:
         os.remove(save_path)
-        flash(f"Duplicate: '{file.filename}' has already been processed and filed.", "error")
-        return redirect(url_for("upload_page"))
+        conf_val = float(existing.get("confidence") or 0)
+        conf_pct = round(conf_val * 100) if conf_val <= 1.0 else round(conf_val)
+        if is_ajax:
+            return jsonify({
+                "success": True,
+                "is_duplicate": True,
+                "doc_id": existing["id"],
+                "filename": existing.get("filename", file.filename),
+                "original_filename": file.filename,
+                "doc_type": existing.get("doc_type", "Document"),
+                "confidence": conf_pct,
+                "destination": existing.get("destination", "Other"),
+                "status": existing.get("status", "filed"),
+                "reasoning": existing.get("reasoning", "Document previously verified and filed."),
+                "message": f"'{file.filename}' is already processed and organized in {existing.get('destination', 'Other')}.",
+                "result_url": url_for("result", doc_id=existing["id"]),
+                "dashboard_url": url_for("index")
+            })
+        flash(f"Duplicate: '{file.filename}' was already processed. Viewing filing record.", "info")
+        return redirect(url_for("result", doc_id=existing["id"]))
 
     # ── Extract text ──
     text = extract_text(save_path)
@@ -172,10 +203,11 @@ def upload():
     # ── AI Classification ──
     result = ai_classify(text, original_filename=file.filename)
 
-    # ── Smart filename ──
-    orig_ext       = ".pdf"
+    # ── Retain user's actual filename, suggest normalized filing name ──
+    orig_ext       = os.path.splitext(file.filename)[1] or ".pdf"
     smart_name     = result.get("suggested_filename") or os.path.splitext(file.filename)[0]
     final_filename = smart_name + orig_ext
+    stored_filename = file.filename
 
     # ── Decide: auto-file, pending approval, or review ──
     doc_type       = result["type"]
@@ -185,22 +217,12 @@ def upload():
     is_new_folder  = not folder_exists(doc_type)        # was this folder brand-new?
 
     if result["status"] == "filed" and is_new_folder:
-        # High confidence but brand new folder → ask user permission
         filing_status = "pending_approval"
-        stored_filename = file.filename
     elif result["status"] == "filed":
-        # High confidence + known folder → auto-file
         filing_status = "filed"
-        renamed_path = os.path.join(UPLOAD_FOLDER, final_filename)
-        if save_path != renamed_path and not os.path.exists(renamed_path):
-            os.rename(save_path, renamed_path)
-            save_path = renamed_path
         file_document(save_path, doc_type)
-        stored_filename = final_filename
     else:
-        # Low confidence → review queue
         filing_status = "needs_review"
-        stored_filename = file.filename
 
     # ── Save to DB ──
     doc_id = insert_document(
@@ -216,6 +238,23 @@ def upload():
         file_hash     = file_hash,
         source_path   = save_path,
     )
+
+    if is_ajax:
+        conf_pct = round(confidence * 100) if confidence <= 1.0 else round(confidence)
+        return jsonify({
+            "success": True,
+            "is_duplicate": False,
+            "doc_id": doc_id,
+            "filename": file.filename,
+            "doc_type": doc_type,
+            "confidence": conf_pct,
+            "destination": dest_display,
+            "status": filing_status,
+            "reasoning": result.get("reasoning", ""),
+            "suggested_name": smart_name,
+            "result_url": url_for("result", doc_id=doc_id),
+            "dashboard_url": url_for("index")
+        })
 
     return redirect(url_for("result", doc_id=doc_id))
 

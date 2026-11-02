@@ -182,6 +182,19 @@ def check_duplicate(file_hash: str) -> bool:
     return row is not None
 
 
+def get_document_by_hash(file_hash: str):
+    """Retrieve full document dictionary by file hash."""
+    if not file_hash:
+        return None
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT * FROM documents WHERE file_hash=? ORDER BY id DESC LIMIT 1", (file_hash,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 # ── Folder Metadata ────────────────────────────────────────────────────────────
 
 def register_folder(folder_name, description="", auto_created=False):

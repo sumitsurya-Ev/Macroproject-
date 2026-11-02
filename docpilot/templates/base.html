@@ -6,32 +6,120 @@
 <title>DocPilot — {% block title %}{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script>
+  (function(){
+    try {
+      var t = localStorage.getItem('dp-theme');
+      if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    } catch(e){}
+  })();
+</script>
 <style>
 /* ═══════════════════════════════════════
    RESET & TOKENS  — warm, minimal palette
 ═══════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:         #F7F6F2;
-  --bg-warm:    #F0EFEB;
+  --spring:     #CAFFA6;
+  --teal:       #204654;
+  --sky:        #A9E0F1;
+  --mist:       #F7F9E1;
+
+  /* Light Theme */
+  --bg:         #F6F5EE;
+  --bg-warm:    #ECEAE1;
   --surface:    #FFFFFF;
-  --ink:        #252A28;
-  --ink-2:      #3A3F3C;
-  --ink-3:      #4D524F;
-  --muted:      #7A7F7C;
-  --line:       #E2E0DB;
-  --line-2:     #EDEBE7;
-  --accent:     #71917D;
-  --accent-dim: #E8F0EB;
-  --accent-dk:  #5A7A66;
-  --amber:      #B4863A;
+  --ink:        #112128;
+  --ink-2:      #204654;
+  --ink-3:      #3A535E;
+  --muted:      #6C8590;
+  --line:       rgba(32, 70, 84, 0.12);
+  --line-2:     rgba(32, 70, 84, 0.06);
+  --accent:     #204654;
+  --accent-dim: rgba(32, 70, 84, 0.08);
+  --accent-dk:  #142F3A;
+  --amber:      #9E6B18;
   --amber-dim:  #FDF5E8;
-  --red:        #BF3B3B;
+  --red:        #C23329;
   --red-dim:    #FDECEC;
+  --btn-primary-bg: #204654;
+  --btn-primary-text: #FFFFFF;
   --sidebar-w:  240px;
   --top-h:      56px;
   --radius:     12px;
   --radius-sm:  8px;
+}
+
+html[data-theme="dark"] {
+  --bg:         #0B0E10;
+  --bg-warm:    #182024;
+  --surface:    #12171A;
+  --ink:        #F3F5EE;
+  --ink-2:      #9EB3BD;
+  --ink-3:      #A9E0F1;
+  --muted:      #617882;
+  --line:       rgba(169, 224, 241, 0.12);
+  --line-2:     rgba(169, 224, 241, 0.06);
+  --accent:     #CAFFA6;
+  --accent-dim: rgba(202, 255, 166, 0.12);
+  --accent-dk:  #CAFFA6;
+  --amber:      #E0A838;
+  --amber-dim:  rgba(224, 168, 56, 0.12);
+  --red:        #E25C5C;
+  --red-dim:    rgba(226, 92, 92, 0.12);
+  --btn-primary-bg: #CAFFA6;
+  --btn-primary-text: #112128;
+}
+html[data-theme="dark"] .btn-primary {
+  background: var(--spring);
+  color: #112128;
+}
+html[data-theme="dark"] .btn-primary:hover {
+  background: #B8F590;
+}
+html[data-theme="dark"] .nav-item.active {
+  background: rgba(202, 255, 166, 0.15);
+  color: var(--spring);
+}
+html[data-theme="dark"] .nav-item.active .nav-dot {
+  background: var(--spring);
+}
+html[data-theme="dark"] .stat-card {
+  background: #141A1E;
+}
+html[data-theme="dark"] thead {
+  background: #141A1E;
+}
+html[data-theme="dark"] tbody tr:hover td {
+  background: #182024;
+}
+html[data-theme="dark"] .upload-zone {
+  background: #12171A;
+  border-color: rgba(169, 224, 241, 0.2);
+}
+html[data-theme="dark"] .upload-zone:hover {
+  border-color: var(--spring);
+  background: rgba(202, 255, 166, 0.05);
+}
+html[data-theme="dark"] input[type=text],
+html[data-theme="dark"] input[type=password],
+html[data-theme="dark"] input[type=search],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background: #182024;
+  color: #F3F5EE;
+  border-color: rgba(169, 224, 241, 0.15);
+}
+html[data-theme="dark"] .modal-box {
+  background: #141A1E;
+  color: #F3F5EE;
+}
+html[data-theme="dark"] .card-footer {
+  background: #141A1E;
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
@@ -810,7 +898,12 @@ textarea:focus{
     <span style="color:var(--line)">›</span>
     <span class="topbar-title">{% block topbar_title %}{% endblock %}</span>
     <div class="topbar-right">
+      <a href="/" class="btn btn-ghost btn-sm" style="gap:5px;font-size:12px;" title="Go to Interactive Landing Experience">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Landing
+      </a>
       {% block topbar_actions %}{% endblock %}
+      <button type="button" class="btn btn-ghost btn-sm" id="dashboard-theme-toggle" aria-label="Toggle theme" title="Toggle dark/light theme" style="width:32px;padding:0;justify-content:center"></button>
     </div>
   </header>
 

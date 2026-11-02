@@ -87,15 +87,14 @@
   <div class="card">
     <div class="card-header"><div class="card-title">What AI Adds vs Keyword Mode</div></div>
     <div class="card-body" style="padding:0">
-      {% for icon, label, kw, ai in [
-        ('🧠','Classification Accuracy','~70–80% on unusual formats','95%+ including Hindi-English and scanned docs'),
-        ('📝','Smart Filename','Not available','Auto-renames to: 2026-09-28_AcmeCorp_Invoice_INV-042.pdf'),
-        ('🔍','Entity Extraction','Not available','Vendor, Client, Amount, GSTIN, PAN, Due Date, Period'),
-        ('💬','Reasoning','None','Plain-English explanation of classification'),
-        ('💰','Cost','Free (offline)','Gemini free tier: 1,500 docs/day at no cost')
+      {% for label, kw, ai in [
+        ('Classification Accuracy','~70–80% on unusual formats','95%+ including Hindi-English and scanned docs'),
+        ('Smart Filename','Not available','Auto-renames to: 2026-09-28_AcmeCorp_Invoice_INV-042.pdf'),
+        ('Entity Extraction','Not available','Vendor, Client, Amount, GSTIN, PAN, Due Date, Period'),
+        ('Reasoning','None','Plain-English explanation of classification'),
+        ('Cost','Free (offline)','Gemini free tier: 1,500 docs/day at no cost')
       ] %}
-      <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--line-2);padding:12px 20px;align-items:start;{% if loop.last %}border-bottom:none{% endif %}">
-        <span style="font-size:15px">{{ icon }}</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-bottom:1px solid var(--line-2);padding:12px 20px;align-items:start;{% if loop.last %}border-bottom:none{% endif %}">
         <span style="font-size:12px;font-weight:600;color:var(--ink)">{{ label }}</span>
         <span style="font-size:11px;color:var(--muted)">{{ kw }}</span>
         <span style="font-size:11px;color:var(--accent-dk);font-weight:500">{{ ai }}</span>

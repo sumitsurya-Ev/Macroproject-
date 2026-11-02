@@ -7,14 +7,14 @@
   <div class="card">
     <div class="card-header">
       <div>
-        <div class="card-title">Upload a PDF</div>
+        <div class="card-title">Upload Document</div>
         <div class="card-desc">Drop it below or click to browse. DocPilot will classify and file it automatically.</div>
       </div>
     </div>
     <div class="card-body">
       <form method="POST" action="/upload" enctype="multipart/form-data" id="upload-form">
         <div class="upload-zone" id="drop-zone">
-          <input type="file" name="file" accept=".pdf" id="file-input"/>
+          <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.webp" id="file-input"/>
           <!-- Paper mascot -->
           <svg width="44" height="44" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px">
             <rect x="12" y="6" width="32" height="44" rx="4" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.5"/>
@@ -23,8 +23,8 @@
             <line x1="20" y1="32" x2="33" y2="32" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
             <line x1="20" y1="38" x2="29" y2="38" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
           </svg>
-          <div class="upload-title">Drop your PDF here</div>
-          <div class="upload-sub">or click anywhere to browse &nbsp;·&nbsp; PDF files only</div>
+          <div class="upload-title">Drop your document here</div>
+          <div class="upload-sub">or click anywhere to browse &nbsp;·&nbsp; PDF, PNG, JPG, and WebP accepted</div>
           <div class="upload-file-tag" id="file-tag" style="display:none"></div>
         </div>
         <div style="margin-top:16px;display:flex;gap:10px">
@@ -47,14 +47,14 @@
   <div style="margin-top:16px">
     <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Supported types</div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-      {% for icon, label, desc in [
-        ('🧾','Invoice','Tax invoices, GST bills, vendor invoices'),
-        ('📑','Contract','NDAs, service agreements, employment contracts'),
-        ('🏠','Lease','Rental agreements, tenancy, leave &amp; license'),
-        ('🏧','Receipt','Payment receipts, UPI confirmations, acknowledgements')
+      {% for label, desc in [
+        ('Invoice','Tax invoices, GST bills, vendor invoices'),
+        ('Contract','NDAs, service agreements, employment contracts'),
+        ('Lease','Rental agreements, tenancy, leave &amp; license'),
+        ('Receipt','Payment receipts, UPI confirmations, acknowledgements')
       ] %}
       <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);display:flex;gap:10px;align-items:flex-start">
-        <span style="font-size:18px;line-height:1">{{ icon }}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);margin-top:2px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--ink)">{{ label }}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">{{ desc }}</div>

@@ -98,6 +98,21 @@
 
     <!-- ── SECTION 1: HERO ── -->
     <section class="hero" id="hero">
+      <!-- Interactive Ambient Constellation Canvas -->
+      <canvas id="ambient-canvas" class="ambient-canvas" aria-hidden="true"></canvas>
+
+      <!-- Webdrift Architectural Deco Layer -->
+      <div class="gl-deco" aria-hidden="true">
+        <div class="gl-dots"></div>
+        <span class="gl-ring"></span>
+        <span class="gl-ring r2"></span>
+        <span class="gl-axis x"></span>
+        <span class="gl-axis y"></span>
+        <span class="gl-tag t1"><i></i>DocPilot v2.4 · Local Neural Classifier</span>
+        <span class="gl-tag t2" id="telemetry-tag">x 0.85 · y 0.42 · 18°</span>
+        <span class="gl-tag t3">LOCAL · SECURE · OFFLINE</span>
+      </div>
+
       <!-- Flight Path Canvas & Paper Plane -->
       <div class="swirl-container" aria-hidden="true">
         <svg class="swirl-svg" id="swirl-svg" viewBox="0 0 1000 480" preserveAspectRatio="xMidYMid meet">
