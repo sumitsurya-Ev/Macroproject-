@@ -36,6 +36,7 @@
     initTheme();
     initAmbientCanvas();
     initContinuousLoop();
+    init3DParallax();
     initSearch();
     initUpload();
     initAccordion();
@@ -308,15 +309,28 @@
       const ribbonOffset = (totalLen * (1 - progress * 2)) % totalLen;
       ribbon.style.strokeDashoffset = ribbonOffset.toFixed(1);
 
-      // Paper plane positioning
+      // 3D Banking physics: calculate roll from curvature
+      const bank = Math.max(-25, Math.min(25, (dy / (Math.abs(dx) + 1)) * 18));
+      const scaleY = Math.cos(bank * Math.PI / 180).toFixed(2);
+
+      // Paper plane positioning with 3D banking
       plane.setAttribute(
         'transform',
-        `translate(${curPt.x.toFixed(1)}, ${curPt.y.toFixed(1)}) rotate(${(angle + wobble).toFixed(1)})`
+        `translate(${curPt.x.toFixed(1)}, ${curPt.y.toFixed(1)}) rotate(${(angle + wobble).toFixed(1)}) scale(1, ${scaleY})`
       );
+
+      // Energy comet beacon leading smoothly along ribbon
+      const cometPulse = document.getElementById('comet-pulse');
+      if (cometPulse) {
+        const cometDist = (curDist + 36) % totalLen;
+        const cometPt = ribbon.getPointAtLength(cometDist);
+        cometPulse.setAttribute('cx', cometPt.x.toFixed(1));
+        cometPulse.setAttribute('cy', cometPt.y.toFixed(1));
+      }
 
       // Live telemetry readout updates
       if (telemetryTag) {
-        telemetryTag.textContent = `x ${(curPt.x / 1000).toFixed(2)} · y ${(curPt.y / 480).toFixed(2)} · ${(angle).toFixed(0)}°`;
+        telemetryTag.textContent = `x ${(curPt.x / 1000).toFixed(2)} · y ${(curPt.y / 480).toFixed(2)} · ${(angle).toFixed(0)}° · BANK ${bank.toFixed(0)}°`;
       }
 
       loopState.rafId = requestAnimationFrame(tick);
@@ -733,3 +747,47 @@
   }
 
 })();
+
+
+  // ── 8. INTERACTIVE 3D MOUSE PARALLAX & TILT ─────────────────────────────
+  function init3DParallax() {
+    const hero = document.getElementById('hero');
+    const card = document.getElementById('search-card');
+    const emblem = document.getElementById('hero-brand-emblem');
+    if (!hero || !card) return;
+
+    let targetRotX = 0, targetRotY = 0;
+    let currentRotX = 0, currentRotY = 0;
+    let isMouseOver = false;
+
+    hero.addEventListener('mousemove', (e) => {
+      const rect = hero.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+      targetRotX = -y * 14; // max 7 deg tilt
+      targetRotY = x * 14;
+      isMouseOver = true;
+    });
+
+    hero.addEventListener('mouseleave', () => {
+      targetRotX = 0;
+      targetRotY = 0;
+      isMouseOver = false;
+    });
+
+    function renderParallax() {
+      // Smooth dampening interpolation
+      currentRotX += (targetRotX - currentRotX) * 0.08;
+      currentRotY += (targetRotY - currentRotY) * 0.08;
+
+      if (Math.abs(currentRotX) > 0.01 || Math.abs(currentRotY) > 0.01 || isMouseOver) {
+        card.style.transform = `perspective(1200px) rotateX(${currentRotX.toFixed(2)}deg) rotateY(${currentRotY.toFixed(2)}deg) translateZ(8px)`;
+        if (emblem) {
+          emblem.style.transform = `perspective(1200px) rotateX(${(-currentRotX * 0.6).toFixed(2)}deg) rotateY(${(-currentRotY * 0.6).toFixed(2)}deg) translateZ(16px)`;
+        }
+      }
+      requestAnimationFrame(renderParallax);
+    }
+    renderParallax();
+  }

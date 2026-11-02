@@ -62,7 +62,7 @@
   <header class="site-header" id="site-header" aria-hidden="true">
     <div class="header-inner">
       <a href="/" class="logo" aria-label="DocPilot Home">
-        <svg width="28" height="18" fill="currentColor" aria-hidden="true">
+        <svg width="44" height="24" viewBox="46.5 31.5 892.0 434.0" fill="currentColor" aria-hidden="true">
           <use href="#docpilot-logo-symbol"></use>
         </svg>
         <span>DocPilot</span>
@@ -116,21 +116,64 @@
       <!-- Flight Path Canvas & Paper Plane -->
       <div class="swirl-container" aria-hidden="true">
         <svg class="swirl-svg" id="swirl-svg" viewBox="0 0 1000 480" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="ribbon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--spring)" stop-opacity="0.95" />
+              <stop offset="35%" stop-color="var(--sky)" stop-opacity="0.9" />
+              <stop offset="70%" stop-color="var(--teal)" stop-opacity="0.85" />
+              <stop offset="100%" stop-color="var(--spring)" stop-opacity="0.95" />
+            </linearGradient>
+            <filter id="swirl-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="plane-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="rgba(202,255,166,0.3)" />
+            </filter>
+          </defs>
+
           <!-- The calligraphic swirl flight path matching the brand logo -->
-          <path id="swirl-ribbon" class="swirl-ribbon" d="M 82,388 C 44,300 32,172 76,104 C 116,40 198,44 224,120 C 248,190 200,252 158,240 C 110,228 107,166 143,130 C 176,97 266,63 384,47 C 490,34 592,49 682,108 C 796,178 873,314 960,446"></path>
-          <!-- Paper plane group -->
-          <g id="dp-plane" style="visibility:hidden">
-            <polygon class="plane-body" points="-20,-10 22,0 -20,10"></polygon>
-            <line class="plane-fold" x1="-20" y1="0" x2="22" y2="0"></line>
-            <polygon class="plane-shade" points="-14,-2 14,0 -14,0"></polygon>
-            <line class="plane-fold" x1="-20" y1="-10" x2="-8" y2="0" opacity="0.3"></line>
-            <line class="plane-fold" x1="-20" y1="10" x2="-8" y2="0" opacity="0.3"></line>
+          <path id="swirl-ribbon" class="swirl-ribbon" filter="url(#swirl-glow)" d="M 82,388 C 44,300 32,172 76,104 C 116,40 198,44 224,120 C 248,190 200,252 158,240 C 110,228 107,166 143,130 C 176,97 266,63 384,47 C 490,34 592,49 682,108 C 796,178 873,314 960,446"></path>
+
+          <!-- Energy comet beacon leading along the ribbon -->
+          <circle id="comet-pulse" r="5" fill="var(--spring)" filter="url(#swirl-glow)" cx="-100" cy="-100"></circle>
+
+          <!-- Paper plane with 3D origami faceted surfaces & plume -->
+          <g id="dp-plane" filter="url(#plane-glow)" style="visibility:hidden">
+            <!-- Engine luminous plume -->
+            <line class="plane-plume" x1="-32" y1="0" x2="-20" y2="0" stroke="var(--sky)" stroke-width="2.5" stroke-linecap="round" opacity="0.85"></line>
+            <!-- Wings & folds -->
+            <polygon class="plane-body" points="-22,-11 24,0 -22,11"></polygon>
+            <polygon class="plane-wing-top" points="-22,-11 24,0 -22,0"></polygon>
+            <polygon class="plane-wing-bottom" points="-22,0 24,0 -22,11"></polygon>
+            <line class="plane-fold" x1="-22" y1="0" x2="24" y2="0"></line>
+            <line class="plane-crease" x1="-22" y1="-11" x2="-10" y2="0"></line>
+            <line class="plane-crease" x1="-22" y1="11" x2="-10" y2="0"></line>
           </g>
         </svg>
       </div>
 
       <!-- Hero Central Content -->
-      <div class="hero-content">
+      <div class="hero-content" id="hero-content">
+        <!-- Hero Central Brand Emblem -->
+        <div class="hero-brand-emblem" id="hero-brand-emblem" tabindex="0" role="img" aria-label="DocPilot Official Calligraphic Swirl Ribbon">
+          <div class="emblem-glow"></div>
+          <svg class="emblem-svg" viewBox="46.5 31.5 892.0 434.0" aria-hidden="true">
+            <defs>
+              <linearGradient id="emblem-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="var(--spring)" />
+                <stop offset="45%" stop-color="var(--sky)" />
+                <stop offset="100%" stop-color="var(--brand)" />
+              </linearGradient>
+            </defs>
+            <use href="#docpilot-logo-symbol" fill="url(#emblem-grad)"></use>
+          </svg>
+          <span class="emblem-tag">INTELLIGENT LOCAL DOCUMENT RUNTIME</span>
+        </div>
+
         <div class="hero-text">
           <h1>DocPilot</h1>
           <p class="hero-sub">Local-first document workspace. Intelligent classification, instant filing, zero cloud exposure.</p>
@@ -161,6 +204,13 @@
             </div>
           </form>
 
+          <!-- Architectural Divider -->
+          <div class="card-divider" aria-hidden="true">
+            <span class="divider-line"></span>
+            <span class="divider-badge">INSTANT CLASSIFICATION &amp; LOCAL FILING</span>
+            <span class="divider-line"></span>
+          </div>
+
           <!-- Dropzone for Upload -->
           <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="Upload document. Drag and drop PDF or image, or press Enter to browse files">
             <input type="file" id="file-input" name="file" accept=".pdf,.png,.jpg,.jpeg,.webp" tabindex="-1" aria-hidden="true" style="display:none">
@@ -170,7 +220,13 @@
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
             <div class="zone-primary">Drop documents here or click to browse</div>
-            <div class="zone-secondary">PDF, PNG, JPG up to 10 MB. Processed securely on this machine.</div>
+            <div class="zone-secondary">Process PDF documents and image scans securely on this machine</div>
+            <div class="zone-formats" aria-hidden="true">
+              <span class="format-pill">PDF</span>
+              <span class="format-pill">PNG</span>
+              <span class="format-pill">JPG</span>
+              <span class="format-pill">WEBP</span>
+            </div>
             <div class="zone-error-msg" id="zone-error" role="alert" aria-live="assertive"></div>
 
             <!-- Selected File Preview -->
