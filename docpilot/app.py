@@ -70,9 +70,16 @@ def get_category_breakdown():
 
 
 # ─────────────────────────────────────────────
-# DASHBOARD
+# LANDING PAGE & DASHBOARD
 # ─────────────────────────────────────────────
 @app.route("/")
+def landing():
+    if request.args.get("view") == "dashboard":
+        return index()
+    return render_template("landing.html")
+
+
+@app.route("/dashboard")
 def index():
     stats              = get_stats()
     recent             = get_all_documents()[:8]
@@ -81,6 +88,43 @@ def index():
                            stats=stats,
                            recent=recent,
                            category_breakdown=category_breakdown)
+
+
+# ─────────────────────────────────────────────
+# SEARCH API
+# ─────────────────────────────────────────────
+@app.route("/api/search")
+def api_search():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify({"results": []})
+    conn = sqlite3.connect("docpilot.db")
+    conn.row_factory = sqlite3.Row
+    search_term = f"%{q}%"
+    rows = conn.execute(
+        """SELECT id, filename, doc_type, confidence, status, destination, reasoning, uploaded_at
+           FROM documents
+           WHERE (filename LIKE ? OR doc_type LIKE ? OR reasoning LIKE ? OR destination LIKE ?)
+           ORDER BY uploaded_at DESC LIMIT 20""",
+        (search_term, search_term, search_term, search_term)
+    ).fetchall()
+    conn.close()
+
+    results = []
+    for r in rows:
+        conf = float(r["confidence"] or 0)
+        conf_pct = round(conf * 100) if conf <= 1.0 else round(conf)
+        results.append({
+            "id": r["id"],
+            "filename": r["filename"],
+            "doc_type": r["doc_type"] or "Document",
+            "confidence": conf_pct,
+            "status": r["status"],
+            "destination": r["destination"] or "",
+            "reasoning": r["reasoning"] or "",
+            "uploaded_at": r["uploaded_at"] or ""
+        })
+    return jsonify({"results": results})
 
 
 # ─────────────────────────────────────────────
