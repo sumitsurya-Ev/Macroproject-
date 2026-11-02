@@ -31,15 +31,26 @@ try:
     from .textutil import canonical
     from .types import Decision, Doc
 except (ImportError, ValueError):
-    from docpilot.calibrate import Calibrator
-    from docpilot.cluster import propose_clusters
-    from docpilot.extract import extract, is_partial
-    from docpilot.folders import FolderPolicy, fallback_name, normalize_name
-    from docpilot.fusion import Weights, confidence, fuse
-    from docpilot.learn import ExemplarKNN, NamePrior, TermModel, doc_terms
-    from docpilot.signals import CentroidIndex, HabitPrior, get_embedder, rule_scorer
-    from docpilot.textutil import canonical
-    from docpilot.types import Decision, Doc
+    try:
+        from docpilot.calibrate import Calibrator
+        from docpilot.cluster import propose_clusters
+        from docpilot.extract import extract, is_partial
+        from docpilot.folders import FolderPolicy, fallback_name, normalize_name
+        from docpilot.fusion import Weights, confidence, fuse
+        from docpilot.learn import ExemplarKNN, NamePrior, TermModel, doc_terms
+        from docpilot.signals import CentroidIndex, HabitPrior, get_embedder, rule_scorer
+        from docpilot.textutil import canonical
+        from docpilot.types import Decision, Doc
+    except (ImportError, ValueError):
+        from calibrate import Calibrator
+        from cluster import propose_clusters
+        from extract import extract, is_partial
+        from folders import FolderPolicy, fallback_name, normalize_name
+        from fusion import Weights, confidence, fuse
+        from learn import ExemplarKNN, NamePrior, TermModel, doc_terms
+        from signals import CentroidIndex, HabitPrior, get_embedder, rule_scorer
+        from textutil import canonical
+        from types import Decision, Doc
 
 SEED = ["Finance", "Identity", "Education", "Work", "Medical", "Travel", "Legal"]
 

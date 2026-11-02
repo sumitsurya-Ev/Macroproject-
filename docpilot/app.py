@@ -33,9 +33,14 @@ from filer        import (
     file_document, get_destination_folder, ensure_folders,
     list_all_folders, folder_exists,
 )
-from docpilot.pipeline import DocPilot
-from docpilot.extract  import extract
-from docpilot.llm      import mask_pii
+try:
+    from docpilot.pipeline import DocPilot
+    from docpilot.extract  import extract
+    from docpilot.llm      import mask_pii
+except (ImportError, ModuleNotFoundError):
+    from pipeline import DocPilot
+    from extract  import extract
+    from llm      import mask_pii
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "docpilot-secret-local-2026")

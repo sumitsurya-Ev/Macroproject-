@@ -1,0 +1,2 @@
+# DocPilot Dependencies (Root level for Render build)
+-r docpilot/requirements.txt
