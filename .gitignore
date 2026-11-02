@@ -25,6 +25,10 @@ docpilot/uploads/*
 docpilot/filed/*
 !docpilot/filed/.gitkeep
 docpilot/test_samples/
+.docpilot/
+**/.docpilot/
+uploads/
+filed/
 
 # ── Local Agent / Tooling Caches ──
 .agents/

@@ -18,20 +18,39 @@ from database import (
     update_folder_description, get_watcher_folders, add_watcher_folder,
     toggle_watcher_folder, remove_watcher_folder,
 )
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(current_dir)
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 from extractor    import extract_text, is_pdf, is_supported_document
 from ai_classifier import ai_classify, get_provider_status, get_all_known_types
 from filer        import (
     file_document, get_destination_folder, ensure_folders,
     list_all_folders, folder_exists,
 )
+from docpilot.pipeline import DocPilot
+from docpilot.extract  import extract
+from docpilot.llm      import mask_pii
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "docpilot-secret-local-2026")
 
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = os.path.join(current_dir, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ensure_folders()
 init_db()
+
+# Initialize Claude Training Engine
+docpilot_engine = DocPilot(root=os.path.join(current_dir, "filed"), state_dir=os.path.join(current_dir, ".docpilot"))
+try:
+    docpilot_engine.scan_existing()
+except Exception:
+    pass
 
 
 # ── Context processor: inject globals into every template ──────────────────────
@@ -128,6 +147,38 @@ def api_search():
 
 
 # ─────────────────────────────────────────────
+# 1-CLICK INSTANT UNDO API
+# ─────────────────────────────────────────────
+@app.route("/api/undo", methods=["POST"])
+def api_undo():
+    try:
+        restored = docpilot_engine.undo_last()
+        if not restored:
+            return jsonify({"success": False, "error": "No previous file moves to undo."}), 400
+        filename = os.path.basename(restored)
+        conn = sqlite3.connect("docpilot.db")
+        row = conn.execute(
+            "SELECT id FROM documents WHERE filename=? ORDER BY id DESC LIMIT 1",
+            (filename,)
+        ).fetchone()
+        if row:
+            conn.execute(
+                "UPDATE documents SET status='needs_review' WHERE id=?",
+                (row[0],)
+            )
+            conn.commit()
+        conn.close()
+        return jsonify({
+            "success": True,
+            "filename": filename,
+            "restored_to": restored,
+            "message": f"Successfully undone: '{filename}' restored to its previous location."
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
 # UPLOAD PAGE
 # ─────────────────────────────────────────────
 @app.route("/upload-page")
@@ -197,11 +248,16 @@ def upload():
         flash(f"Duplicate: '{file.filename}' was already processed. Viewing filing record.", "info")
         return redirect(url_for("result", doc_id=existing["id"]))
 
-    # ── Extract text ──
-    text = extract_text(save_path)
+    # ── Safe extraction via DocPilot ──
+    doc = extract(save_path)
+    text = doc.text or extract_text(save_path)
 
-    # ── AI Classification ──
-    result = ai_classify(text, original_filename=file.filename)
+    # ── Claude Training Engine Multi-Signal Analysis ──
+    decision = docpilot_engine.analyze(save_path)
+
+    # ── AI Entity extraction & filename refinement (with PII masking) ──
+    masked_text = mask_pii(text)
+    result = ai_classify(masked_text, original_filename=file.filename)
 
     # ── Retain user's actual filename, suggest normalized filing name ──
     orig_ext       = os.path.splitext(file.filename)[1] or ".pdf"
@@ -209,34 +265,46 @@ def upload():
     final_filename = smart_name + orig_ext
     stored_filename = file.filename
 
-    # ── Decide: auto-file, pending approval, or review ──
-    doc_type       = result["type"]
-    confidence     = result["confidence"]
-    dest_folder    = get_destination_folder(doc_type)   # creates folder if new
-    dest_display   = os.path.basename(dest_folder)
-    is_new_folder  = not folder_exists(doc_type)        # was this folder brand-new?
+    # ── Consensus resolution between signals & AI ──
+    doc_type = result["type"]
+    if decision.folder:
+        clean_folder = os.path.basename(decision.folder.replace("\\", "/"))
+        if clean_folder and clean_folder != "Other":
+            doc_type = clean_folder
 
-    if result["status"] == "filed" and is_new_folder:
-        filing_status = "pending_approval"
-    elif result["status"] == "filed":
+    confidence = max(decision.confidence, result.get("confidence", 0.0))
+    dest_folder = get_destination_folder(doc_type)
+    dest_display = os.path.basename(dest_folder)
+    is_new_folder = not folder_exists(doc_type)
+
+    if (decision.action == "auto_move" or result["status"] == "filed") and confidence >= 0.85 and not is_new_folder:
         filing_status = "filed"
-        file_document(save_path, doc_type)
+        docpilot_engine.file(save_path, doc_type)
+    elif (result["status"] == "filed" or decision.action in ("auto_move", "suggest")) and is_new_folder:
+        filing_status = "pending_approval"
+    elif result["status"] == "filed" and confidence >= 0.85:
+        filing_status = "filed"
+        docpilot_engine.file(save_path, doc_type)
     else:
         filing_status = "needs_review"
 
-    # ── Save to DB ──
+    # ── Save to DB with full signal metadata ──
     doc_id = insert_document(
         filename      = stored_filename,
         doc_type      = doc_type,
         confidence    = confidence,
         destination   = dest_display,
         status        = filing_status,
-        reasoning     = result.get("reasoning", ""),
+        reasoning     = result.get("reasoning", "") or f"Signals: {decision.signals}",
         entities      = result.get("entities", {}),
         suggested_name= smart_name,
         provider      = result.get("provider", "keyword"),
         file_hash     = file_hash,
         source_path   = save_path,
+        signals_json  = decision.signals,
+        ocr_quality   = doc.ocr_conf,
+        source_url    = doc.source_url,
+        action        = decision.action,
     )
 
     if is_ajax:
@@ -252,6 +320,11 @@ def upload():
             "status": filing_status,
             "reasoning": result.get("reasoning", ""),
             "suggested_name": smart_name,
+            "signals": decision.signals,
+            "ocr_conf": round(doc.ocr_conf * 100),
+            "source_url": doc.source_url,
+            "action": decision.action,
+            "can_undo": True,
             "result_url": url_for("result", doc_id=doc_id),
             "dashboard_url": url_for("index")
         })
@@ -422,7 +495,9 @@ def api_approvals_count():
 # ─────────────────────────────────────────────
 @app.route("/folder/<folder_name>")
 def folder_view(folder_name):
-    conn = sqlite3.connect("docpilot.db")
+    from database import DB_PATH
+    from filer import BASE_FILED_DIR
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     docs = conn.execute(
         "SELECT * FROM documents WHERE destination=? AND status='filed' ORDER BY uploaded_at DESC",
@@ -430,11 +505,11 @@ def folder_view(folder_name):
     ).fetchall()
     conn.close()
 
-    folder_path    = os.path.join("filed", folder_name)
+    folder_path    = os.path.join(BASE_FILED_DIR, folder_name)
     physical_files = sorted(os.listdir(folder_path)) if os.path.isdir(folder_path) else []
 
     # Get folder description if available
-    conn2 = sqlite3.connect("docpilot.db")
+    conn2 = sqlite3.connect(DB_PATH)
     conn2.row_factory = sqlite3.Row
     meta = conn2.execute(
         "SELECT * FROM folder_metadata WHERE folder_name=?", (folder_name,)
@@ -454,8 +529,9 @@ def folder_view(folder_name):
 @app.route("/open-folder/<folder_name>")
 def open_folder(folder_name):
     import subprocess
+    from filer import BASE_FILED_DIR
     safe = "".join(c for c in folder_name if c.isalnum() or c in (" ", "_", "-"))
-    folder_path = os.path.abspath(os.path.join("filed", safe))
+    folder_path = os.path.abspath(os.path.join(BASE_FILED_DIR, safe))
     if os.path.isdir(folder_path):
         subprocess.Popen(["explorer", folder_path])
     return jsonify({"ok": True, "path": folder_path})
@@ -583,10 +659,10 @@ def create_folder():
         flash("Please enter a folder name.", "error")
         return redirect(request.referrer or url_for("settings"))
 
-    from filer import _sanitize_folder_name
+    from filer import _sanitize_folder_name, BASE_FILED_DIR
     safe_name = _sanitize_folder_name(folder_name)
 
-    dest_folder = os.path.join("filed", safe_name)
+    dest_folder = os.path.join(BASE_FILED_DIR, safe_name)
     os.makedirs(dest_folder, exist_ok=True)
 
     register_folder(safe_name, description=description, auto_created=False)

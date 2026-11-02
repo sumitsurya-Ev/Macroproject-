@@ -1,0 +1,11 @@
+numpy
+pymupdf
+pillow
+rapidocr-onnxruntime
+python-docx
+openpyxl
+python-pptx
+watchdog
+# optional
+fastembed        # multilingual neural embeddings (falls back to a built-in hashing embedder)
+openai           # one client for OpenAI, Gemini, Grok and local Ollama (OpenAI-compatible APIs)

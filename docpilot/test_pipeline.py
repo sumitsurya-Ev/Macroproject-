@@ -16,7 +16,7 @@ if sys.stdout.encoding != 'utf-8':
 from extractor import extract_text
 from classifier import classify
 
-TEST_DIR = "test_samples"
+TEST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_samples")
 
 files = [
     ("sample_tax_invoice.pdf", "Invoice", True),

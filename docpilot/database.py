@@ -1,6 +1,7 @@
 import sqlite3, os, json
 
-DB_PATH = "docpilot.db"
+DOCPILOT_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(DOCPILOT_DIR, "docpilot.db")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -56,6 +57,10 @@ def init_db():
         ("provider",       "TEXT DEFAULT 'keyword'"),
         ("file_hash",      "TEXT DEFAULT ''"),
         ("source_path",    "TEXT DEFAULT ''"),
+        ("signals_json",   "TEXT DEFAULT '{}'"),
+        ("ocr_quality",    "REAL DEFAULT 1.0"),
+        ("source_url",     "TEXT DEFAULT ''"),
+        ("action",         "TEXT DEFAULT 'auto_move'"),
     ]
     for col_name, col_def in new_cols:
         if col_name not in existing_cols:
@@ -69,14 +74,16 @@ def init_db():
 
 def insert_document(filename, doc_type, confidence, destination, status,
                     reasoning="", entities=None, suggested_name="",
-                    provider="keyword", file_hash="", source_path=""):
+                    provider="keyword", file_hash="", source_path="",
+                    signals_json=None, ocr_quality=1.0, source_url="", action="auto_move"):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """INSERT INTO documents
            (filename, doc_type, confidence, destination, status,
-            reasoning, entities, suggested_name, provider, file_hash, source_path)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            reasoning, entities, suggested_name, provider, file_hash, source_path,
+            signals_json, ocr_quality, source_url, action)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             filename, doc_type, round(confidence, 4), destination, status,
             reasoning,
@@ -85,6 +92,10 @@ def insert_document(filename, doc_type, confidence, destination, status,
             provider,
             file_hash or "",
             source_path or "",
+            json.dumps(signals_json or {}),
+            float(ocr_quality or 1.0),
+            source_url or "",
+            action or "auto_move",
         )
     )
     conn.commit()

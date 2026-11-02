@@ -898,6 +898,10 @@ textarea:focus{
     <span style="color:var(--line)">›</span>
     <span class="topbar-title">{% block topbar_title %}{% endblock %}</span>
     <div class="topbar-right">
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-global-undo" onclick="performGlobalUndo()" title="Undo last document filing action" style="gap:5px;font-size:12px;border:1px solid var(--line);">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+        Undo Move
+      </button>
       <a href="/" class="btn btn-ghost btn-sm" style="gap:5px;font-size:12px;" title="Go to Interactive Landing Experience">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Landing
@@ -958,6 +962,51 @@ textarea:focus{
     },3500);
   });
 })();
+
+// Global Toast Notification Helper
+function showToast(message, category) {
+  var stack = document.getElementById('toast-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'toast-stack';
+    stack.id = 'toast-stack';
+    document.body.appendChild(stack);
+  }
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + (category || 'info');
+  toast.textContent = message;
+  stack.appendChild(toast);
+  setTimeout(function(){
+    toast.style.transition = 'opacity .4s, transform .4s';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(function(){ toast.remove(); }, 400);
+  }, 4000);
+}
+
+// 1-Click Instant Undo
+function performGlobalUndo() {
+  var btn = document.getElementById('btn-global-undo');
+  if(btn) btn.disabled = true;
+  fetch('/api/undo', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(btn) btn.disabled = false;
+    if(d.success) {
+      showToast(d.message, 'success');
+      setTimeout(function(){ window.location.reload(); }, 900);
+    } else {
+      showToast(d.error || 'Nothing to undo', 'warn');
+    }
+  })
+  .catch(function(e){
+    if(btn) btn.disabled = false;
+    showToast('Failed to perform undo.', 'warn');
+  });
+}
 
 // Drag-drop on upload zones
 document.addEventListener('DOMContentLoaded',function(){

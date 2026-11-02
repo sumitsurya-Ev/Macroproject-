@@ -1,4 +1,4 @@
-﻿"""
+"""
 filer.py — Fully dynamic document filer.
 
 Creates destination folders on-the-fly for ANY document type.
@@ -9,7 +9,8 @@ import os
 import re
 import shutil
 
-BASE_FILED_DIR = "filed"
+DOCPILOT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_FILED_DIR = os.path.join(DOCPILOT_DIR, "filed")
 
 
 def _sanitize_folder_name(name: str) -> str:

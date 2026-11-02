@@ -55,6 +55,7 @@ TYPE CLASSIFICATION RULES — choose the most specific and accurate type:
 - "Credit Note"      : Credit notes, debit notes, return memos
 - "Certificate"      : Academic certificates, completion certificates, registration certificates
 - "Meeting Minutes"  : MOM, agenda, meeting notes, board resolutions
+- "Assignments"      : University assignments, homework, problem sets, course submissions, lab reports
 - "Other"            : Anything that does not clearly match the above categories
 
 CONFIDENCE GUIDELINES:
@@ -216,6 +217,12 @@ def _classify_keyword(text: str) -> dict:
                   "action items","discussed","resolved","next meeting",
                   "board resolution","committee meeting"]
         },
+        "Assignments": {
+            "w": 0.92,
+            "k": ["assignment","assignments","homework","coursework","problem set",
+                  "submission","roll no","student name","term paper","lab report",
+                  "due date","department of","course","problem 1","problem 2"]
+        },
     }
 
     scores = {}
@@ -224,6 +231,24 @@ def _classify_keyword(text: str) -> dict:
         ratio   = len(matched) / len(cfg["k"])
         score   = min(ratio * cfg["w"] * 5, cfg["w"])
         scores[cat] = {"score": score, "matched": matched}
+
+    try:
+        from filer import list_all_folders
+        existing_folders = list_all_folders()
+    except Exception:
+        existing_folders = []
+
+    for f_name in existing_folders:
+        if f_name in KEYWORD_CATEGORIES or f_name.lower() in ("other", "misc", "unknown"):
+            continue
+        clean_words = [w.lower() for w in re.split(r'[_ -]+', f_name) if len(w) >= 3]
+        if not clean_words:
+            continue
+        matched_words = [w for w in clean_words if re.search(r'\b' + re.escape(w) + r'\b', text_lower)]
+        if matched_words:
+            ratio = len(matched_words) / len(clean_words)
+            f_score = min(0.92, 0.82 + 0.12 * ratio)
+            scores[f_name] = {"score": f_score, "matched": matched_words}
 
     best     = max(scores, key=lambda k: scores[k]["score"])
     b_score  = scores[best]["score"]
@@ -321,10 +346,11 @@ def get_all_known_types() -> list:
         "Invoice", "Receipt", "Contract", "Lease", "Purchase Order",
         "Quotation", "Bank Statement", "Salary Slip", "Delivery Challan",
         "Legal Notice", "Insurance Policy", "KYC Document", "Tax Return",
-        "Credit Note", "Certificate", "Meeting Minutes", "Other"
+        "Credit Note", "Certificate", "Meeting Minutes", "Assignments", "Other"
     ]
     try:
-        conn  = sqlite3.connect("docpilot.db")
+        from database import DB_PATH
+        conn  = sqlite3.connect(DB_PATH)
         rows  = conn.execute("SELECT DISTINCT doc_type FROM documents").fetchall()
         conn.close()
         db_types = [r[0] for r in rows if r[0]]

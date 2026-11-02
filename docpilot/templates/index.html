@@ -75,6 +75,13 @@
             <div class="upload-sub" style="margin-top:4px">or click to browse &nbsp;·&nbsp; PDF, PNG, JPG, and WebP accepted</div>
             <div class="upload-file-tag" id="file-tag" style="display:none"></div>
           </div>
+          <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+            <button type="submit" class="btn btn-primary" id="submit-btn" style="flex:1;height:42px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Classify &amp; File Document
+            </button>
+            <a href="/upload-page" class="btn btn-ghost" style="height:42px;padding:0 16px">Advanced</a>
+          </div>
         </form>
       </div>
     </div>
@@ -217,20 +224,72 @@ function toggleCollapsible(btn) {
   panel.classList.toggle('open', !expanded);
 }
 
-// Refresh submit button state
-document.getElementById('upload-form').addEventListener('submit',function(){
-  var btn=document.getElementById('submit-btn');
-  if(btn){btn.textContent='Processing…';btn.disabled=true}
-});
-var fileInput=document.getElementById('file-input');
-var fileTag=document.getElementById('file-tag');
-if(fileInput&&fileTag){
-  fileInput.addEventListener('change',function(){
-    if(this.files[0]){
-      fileTag.textContent=this.files[0].name;
-      fileTag.style.display='inline-flex';
+// Drag & drop handlers and auto-forwarding on file drop/select
+var dropZone = document.getElementById('drop-zone');
+var fileInput = document.getElementById('file-input');
+var fileTag = document.getElementById('file-tag');
+var submitBtn = document.getElementById('submit-btn');
+var uploadForm = document.getElementById('upload-form');
+
+function handleFileSelection(file) {
+  if (!file) return;
+  if (fileTag) {
+    fileTag.textContent = file.name;
+    fileTag.style.display = 'inline-flex';
+  }
+  if (submitBtn) {
+    submitBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="animation:spin .6s linear infinite"><path d="M8 2a6 6 0 100 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Processing ' + file.name + '…';
+    submitBtn.disabled = true;
+  }
+  if (uploadForm) {
+    uploadForm.submit();
+  }
+}
+
+if (dropZone && fileInput) {
+  ['dragenter', 'dragover'].forEach(function(evt) {
+    dropZone.addEventListener(evt, function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('drag-over');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(function(evt) {
+    dropZone.addEventListener(evt, function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('drag-over');
+    }, false);
+  });
+
+  dropZone.addEventListener('drop', function(e) {
+    var dt = e.dataTransfer;
+    var files = dt ? dt.files : null;
+    if (files && files.length > 0) {
+      fileInput.files = files;
+      handleFileSelection(files[0]);
+    }
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      handleFileSelection(this.files[0]);
+    }
+  });
+}
+
+if (uploadForm) {
+  uploadForm.addEventListener('submit', function() {
+    if (submitBtn) {
+      submitBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="animation:spin .6s linear infinite"><path d="M8 2a6 6 0 100 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Processing…';
+      submitBtn.disabled = true;
     }
   });
 }
 </script>
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.upload-zone.drag-over { border-color: var(--accent) !important; background: var(--accent-dim) !important; }
+</style>
 {% endblock %}

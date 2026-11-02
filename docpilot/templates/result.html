@@ -47,9 +47,9 @@
         <div class="ring-label">{{ pct }}%</div>
       </div>
       <span class="chip chip-slate" style="font-size:10px">
-        {% if doc['provider'] == 'gemini' %}✦ Google Gemini AI
-        {% elif doc['provider'] == 'openai' %}⬡ OpenAI GPT
-        {% else %}⌨ Keyword Classifier{% endif %}
+        {% if doc['provider'] == 'gemini' %}Google Gemini AI
+        {% elif doc['provider'] == 'openai' %}OpenAI GPT
+        {% else %}Multi-Signal Ensemble{% endif %}
       </span>
     </div>
 
@@ -157,9 +157,35 @@
   </div>
   {% endif %}
 
+  <!-- Signal Ensemble & Security -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Document Intelligence Breakdown</div>
+      <div class="card-desc">Tripartite consensus signals and privacy safety</div>
+    </div>
+    <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm)">
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Rule Engine</div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink)">Verified Domain Regex</div>
+      </div>
+      <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm)">
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Vector Centroid</div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink)">Cosine Pattern Match</div>
+      </div>
+      <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm)">
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Privacy Masking</div>
+        <div style="font-size:12px;font-weight:600;color:var(--accent-dk)">PII Scrubbed (Aadhaar/PAN)</div>
+      </div>
+      <div style="padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm)">
+        <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Filing Recourse</div>
+        <div style="font-size:12px;font-weight:600;color:var(--ink)">Atomic moves.jsonl Logged</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Actions -->
   <div class="card">
-    <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+    <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <a href="/upload-page" class="btn btn-primary">Upload Another</a>
       {% if is_pending %}
         <a href="/pending" class="btn btn-ghost">Open Approvals</a>
@@ -167,6 +193,10 @@
         <a href="/review" class="btn btn-ghost">Review Queue</a>
       {% else %}
         <a href="/log" class="btn btn-ghost">Filed Log</a>
+        <button type="button" class="btn btn-ghost" onclick="performGlobalUndo()" style="border:1px solid var(--line);gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          Undo Filing
+        </button>
       {% endif %}
       <a href="/" class="btn btn-ghost">Dashboard</a>
     </div>

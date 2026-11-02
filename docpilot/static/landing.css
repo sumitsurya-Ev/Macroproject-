@@ -278,7 +278,8 @@ svg { display: block; }
   min-height: 100svh;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   padding: calc(var(--header-h) + 16px) 24px 64px;
 }
 
@@ -286,7 +287,7 @@ svg { display: block; }
 #ambient-canvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  pointer-events: auto;
+  pointer-events: none;
   z-index: 0;
 }
 
@@ -588,6 +589,9 @@ svg { display: block; }
   margin-top: 16px;
   text-align: left;
   animation: resultSlideUp 300ms var(--ease);
+  position: relative;
+  z-index: 25;
+  pointer-events: auto;
 }
 @keyframes resultSlideUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -616,6 +620,18 @@ svg { display: block; }
   display: flex; align-items: center; gap: 10px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
+  position: relative;
+  z-index: 26;
+  pointer-events: auto;
+}
+.ulr-actions a,
+.ulr-actions button,
+.result-card a,
+.result-card button {
+  position: relative;
+  z-index: 27;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 /* Trust line */
@@ -627,10 +643,15 @@ svg { display: block; }
 /* ── 10. SEARCH RESULTS REGION ────────────────────────────────────────── */
 .results-region {
   width: 100%; max-width: 680px;
-  margin-top: 12px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 24;
+  pointer-events: auto;
 }
 .results-grid {
   display: flex; flex-direction: column; gap: 8px;
+  position: relative;
+  z-index: 25;
 }
 .result-card {
   background: var(--surface);
@@ -640,6 +661,9 @@ svg { display: block; }
   display: flex; align-items: center; gap: 14px;
   box-shadow: var(--sh-sm);
   transition: transform var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+  position: relative;
+  z-index: 25;
+  pointer-events: auto;
 }
 .result-card:hover {
   transform: translateY(-2px);

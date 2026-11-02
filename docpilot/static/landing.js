@@ -412,7 +412,7 @@
             <div class="result-filename" title="${escapeHtml(r.filename)}">${escapeHtml(r.filename)}</div>
             <span class="result-type">${escapeHtml(r.doc_type || 'Document')}</span>
             <span class="result-conf">${r.confidence}% match</span>
-            <a href="/dashboard" class="btn-primary" style="height:28px;padding:0 12px;font-size:12px;margin-left:auto;text-decoration:none">View</a>
+            <a href="${r.id ? `/result/${r.id}` : '/dashboard'}" class="btn-primary" style="height:28px;padding:0 12px;font-size:12px;margin-left:auto;text-decoration:none">View</a>
           </div>
         `).join('');
 
@@ -648,12 +648,13 @@
 
       resultsLive.innerHTML = cardHtml;
 
-      const dismissBtn = document.getElementById('ulr-dismiss-btn');
-      if (dismissBtn) {
-        dismissBtn.addEventListener('click', () => {
+      resultsLive.onclick = (e) => {
+        const dismiss = e.target.closest('#ulr-dismiss-btn');
+        if (dismiss) {
+          e.preventDefault();
           resultsLive.innerHTML = '';
-        });
-      }
+        }
+      };
     }
   }
 

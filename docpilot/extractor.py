@@ -6,12 +6,16 @@ import os
 from pypdf import PdfReader
 from PIL import Image
 
-SUPPORTED_EXTENSIONS = ('.pdf', '.png', '.jpg', '.jpeg', '.webp')
+SUPPORTED_EXTENSIONS = (
+    '.pdf', '.png', '.jpg', '.jpeg', '.webp',
+    '.docx', '.xlsx', '.pptx',
+    '.txt', '.csv', '.tsv', '.json', '.zip'
+)
 
 def extract_text(filepath: str) -> str:
     """
     Extract text from a document.
-    Supports native PDFs and image metadata/text extraction.
+    Supports native PDFs, images, Office formats, and text/archive files.
     Returns empty string if file is unreadable.
     """
     ext = os.path.splitext(filepath)[1].lower()
@@ -39,6 +43,14 @@ def extract_text(filepath: str) -> str:
                 return " ".join(info)
         except Exception as e:
             print(f"[Extractor] Could not read Image {filepath}: {e}")
+            return ""
+
+    elif ext in ('.docx', '.xlsx', '.pptx', '.txt', '.csv', '.tsv', '.json', '.zip'):
+        try:
+            from docpilot.extract import extract
+            return extract(filepath).text
+        except Exception as e:
+            print(f"[Extractor] Multi-format parse error for {filepath}: {e}")
             return ""
 
     return ""

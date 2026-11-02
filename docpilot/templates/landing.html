@@ -180,7 +180,7 @@
         </div>
 
         <!-- Unified Search & Upload Card -->
-        <div class="search-card" id="search-card" inert aria-hidden="true">
+        <div class="search-card revealed" id="search-card">
           <!-- Search Form -->
           <form class="search-form" id="search-form" role="search">
             <div class="input-wrap">
@@ -257,13 +257,13 @@
           </div>
         </div>
 
+        <!-- Live Search Results & Upload Inspector Container (Elevated foreground) -->
+        <div class="results-region" id="results-region">
+          <div class="results-live" id="results-live" aria-live="polite" aria-atomic="true"></div>
+        </div>
+
         <!-- Trust statement -->
         <p class="trust-line">Local processing · Private and offline-capable · High accuracy classification · 85% auto-file threshold</p>
-      </div>
-
-      <!-- Live Search Results Container -->
-      <div class="results-region" id="results-region">
-        <div class="results-live" id="results-live" aria-live="polite" aria-atomic="true"></div>
       </div>
     </section>
 
