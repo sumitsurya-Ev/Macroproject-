@@ -9,7 +9,7 @@ from .llm import mask_pii, parse_response
 from .pipeline import DocPilot
 from .signals import CentroidIndex, HabitPrior, HashingEmbedder, get_embedder, rule_scorer
 from .textutil import STOP, canonical, content_tokens, filename_tokens, softmax, tokens
-from .types import Decision, Doc
+from .doc_types import Decision, Doc
 
 __all__ = [
     "Doc",

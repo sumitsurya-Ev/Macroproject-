@@ -14,10 +14,10 @@ import numpy as np
 
 try:
     from .textutil import STOP, canonical, filename_tokens, softmax, stem_word, tokens
-    from .types import Doc
+    from .doc_types import Doc
 except (ImportError, ValueError):
     from docpilot.textutil import STOP, canonical, filename_tokens, softmax, stem_word, tokens
-    from docpilot.types import Doc
+    from docpilot.doc_types import Doc
 
 
 # ================================================================= A. rules

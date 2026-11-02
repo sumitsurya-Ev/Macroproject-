@@ -16,10 +16,10 @@ import numpy as np
 
 try:
     from .textutil import content_tokens, filename_tokens, softmax, stem_word
-    from .types import Doc
+    from .doc_types import Doc
 except (ImportError, ValueError):
     from docpilot.textutil import content_tokens, filename_tokens, softmax, stem_word
-    from docpilot.types import Doc
+    from docpilot.doc_types import Doc
 
 
 def doc_terms(doc: Doc) -> Counter:

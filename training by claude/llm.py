@@ -17,11 +17,11 @@ from typing import Callable, Optional
 try:
     from .folders import normalize_name
     from .textutil import canonical
-    from .types import Doc
+    from .doc_types import Doc
 except (ImportError, ValueError):
     from folders import normalize_name
     from textutil import canonical
-    from docpilot.types import Doc
+    from docpilot.doc_types import Doc
 
 _MASKS = [
     (re.compile(r"\b\d{4}\s?\d{4}\s?\d{4}\b"), "[AADHAAR]"),

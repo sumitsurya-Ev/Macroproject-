@@ -20,9 +20,9 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from pathlib import Path
 
 try:
-    from .types import Doc
+    from .doc_types import Doc
 except (ImportError, ValueError):
-    from docpilot.types import Doc
+    from docpilot.doc_types import Doc
 
 PARTIAL_EXT = {".crdownload", ".part", ".tmp", ".download", ".opdownload", ".partial"}
 MAX_CHARS = 20000

@@ -29,7 +29,7 @@ try:
     from .learn import ExemplarKNN, NamePrior, TermModel, doc_terms
     from .signals import CentroidIndex, HabitPrior, get_embedder, rule_scorer
     from .textutil import canonical
-    from .types import Decision, Doc
+    from .doc_types import Decision, Doc
 except (ImportError, ValueError):
     try:
         from docpilot.calibrate import Calibrator
@@ -40,7 +40,7 @@ except (ImportError, ValueError):
         from docpilot.learn import ExemplarKNN, NamePrior, TermModel, doc_terms
         from docpilot.signals import CentroidIndex, HabitPrior, get_embedder, rule_scorer
         from docpilot.textutil import canonical
-        from docpilot.types import Decision, Doc
+        from docpilot.doc_types import Decision, Doc
     except (ImportError, ValueError):
         from calibrate import Calibrator
         from cluster import propose_clusters
@@ -50,7 +50,7 @@ except (ImportError, ValueError):
         from learn import ExemplarKNN, NamePrior, TermModel, doc_terms
         from signals import CentroidIndex, HabitPrior, get_embedder, rule_scorer
         from textutil import canonical
-        from types import Decision, Doc
+        from doc_types import Decision, Doc
 
 SEED = ["Finance", "Identity", "Education", "Work", "Medical", "Travel", "Legal"]
 
